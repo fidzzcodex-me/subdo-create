@@ -14,25 +14,68 @@ module.exports = async (req, res) => {
   }
 
   try {
-    // Parse FormData atau JSON body
+    // Collect raw body
+    let rawBody = '';
+    
+    for await (const chunk of req) {
+      rawBody += chunk.toString();
+    }
+
     let zone, token, subdomain, ip, proxied;
 
-    if (req.headers['content-type']?.includes('application/json')) {
+    // Parse based on content type
+    const contentType = req.headers['content-type'] || '';
+    
+    if (contentType.includes('application/json')) {
       // JSON body
-      zone = req.body?.zone || '';
-      token = req.body?.token || '';
-      subdomain = req.body?.subdomain || '';
-      ip = req.body?.ip || '';
-      proxied = req.body?.proxied === 'true' || req.body?.proxied === true;
-    } else {
-      // FormData - parse manually dari string body
-      const body = typeof req.body === 'string' ? req.body : Buffer.from(req.body || '').toString();
-      const params = new URLSearchParams(body);
+      const body = JSON.parse(rawBody);
+      zone = body?.zone || '';
+      token = body?.token || '';
+      subdomain = body?.subdomain || '';
+      ip = body?.ip || '';
+      proxied = body?.proxied === 'true' || body?.proxied === true;
+    } else if (contentType.includes('application/x-www-form-urlencoded')) {
+      // URL encoded form
+      const params = new URLSearchParams(rawBody);
       zone = params.get('zone') || '';
       token = params.get('token') || '';
       subdomain = params.get('subdomain') || '';
       ip = params.get('ip') || '';
       proxied = params.get('proxied') === 'true';
+    } else if (contentType.includes('multipart/form-data')) {
+      // FormData - parse boundary
+      const boundary = contentType.split('boundary=')[1];
+      if (!boundary) {
+        return res.status(400).json({
+          success: false,
+          errors: [{ message: 'Invalid multipart boundary' }]
+        });
+      }
+
+      const parts = rawBody.split(`--${boundary}`);
+      
+      for (const part of parts) {
+        if (part.includes('name="zone"')) {
+          const match = part.match(/name="zone"[^\r\n]*\r\n\r\n([\s\S]*?)\r\n/);
+          zone = match ? match[1].trim() : '';
+        }
+        if (part.includes('name="token"')) {
+          const match = part.match(/name="token"[^\r\n]*\r\n\r\n([\s\S]*?)\r\n/);
+          token = match ? match[1].trim() : '';
+        }
+        if (part.includes('name="subdomain"')) {
+          const match = part.match(/name="subdomain"[^\r\n]*\r\n\r\n([\s\S]*?)\r\n/);
+          subdomain = match ? match[1].trim() : '';
+        }
+        if (part.includes('name="ip"')) {
+          const match = part.match(/name="ip"[^\r\n]*\r\n\r\n([\s\S]*?)\r\n/);
+          ip = match ? match[1].trim() : '';
+        }
+        if (part.includes('name="proxied"')) {
+          const match = part.match(/name="proxied"[^\r\n]*\r\n\r\n([\s\S]*?)\r\n/);
+          proxied = match ? match[1].trim() === 'true' : false;
+        }
+      }
     }
 
     // Validasi
