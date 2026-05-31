@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,7 +7,7 @@
 <title>CF Subdomain Creator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css"/>
 <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
 <style>
@@ -18,370 +19,598 @@
   --sh:0 6px 28px rgba(37,99,235,.09),0 1px 4px rgba(37,99,235,.05);
   --shb:0 4px 14px rgba(37,99,235,.28);
 }
-[data-theme="dark"] {
-  --bg:#0f172a; --card:#1e293b; --s2:#334155;
-  --b100:#1e3a8a; --b200:#1e40af; --b300:#3b82f6; --b400:#60a5fa; --b500:#93c5fd; --b600:#bfdbfe;
-  --t900:#f1f5f9; --t600:#cbd5e1; --t400:#94a3b8; --bd:#334155;
-  --sh:0 6px 28px rgba(0,0,0,.4),0 1px 4px rgba(0,0,0,.3);
-  --shb:0 4px 14px rgba(59,130,246,.4);
-}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t900);
   min-height:100vh;display:flex;flex-direction:column;align-items:center;
-  padding:0 16px 80px;overflow-x:hidden;transition:background.3s,color.3s}
+  padding:0 16px 80px;overflow-x:hidden}
 
-/* bg blobs */
+/* bg */
 .blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
 .blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:.4;animation:drift 22s ease-in-out infinite alternate}
 .b1{width:480px;height:480px;background:radial-gradient(#bfdbfe,#93c5fd88);top:-80px;left:-60px}
-.b2{width:360px;height:360px;background:radial-gradient(#dbeafe,#c7d2fe55);top:38%;right:-70px;animation-delay:-9s}
-.b3{width:280px;height:280px;background:radial-gradient(#e0f2fe,#bae6fd44);bottom:8%;left:18%;animation-delay:-15s}
-@keyframes drift{0%{transform:translate(0,0) scale(1)}100%{transform:translate(-10px,16px) scale(.97)}}
+.b2{width:360px;height:360px;background:radial-gradient(#dbeafe,#c7d2fe55);top:38%;right:-70px;animation-delay:-9s;animation-duration:18s}
+.b3{width:280px;height:280px;background:radial-gradient(#e0f2fe,#bae6fd44);bottom:8%;left:18%;animation-delay:-15s;animation-duration:26s}
+@keyframes drift{0%{transform:translate(0,0) scale(1)}50%{transform:translate(18px,-12px) scale(1.03)}100%{transform:translate(-10px,16px) scale(.97)}}
+
 .dotgrid{position:fixed;inset:0;z-index:0;pointer-events:none;
   background-image:radial-gradient(circle,#93c5fd2c 1px,transparent 1px);
   background-size:27px 27px;
   mask-image:radial-gradient(ellipse 70% 70% at 50% 40%,black,transparent)}
 
-/* topbar */
-.topbar{position:fixed;top:18px;right:18px;z-index:100;display:flex;gap:8px}
-.topbar button{padding:6px 10px;border:1.5px solid var(--bd);border-radius:8px;background:var(--card);
-  cursor:pointer;font-size:.7rem;font-weight:600;color:var(--t600);transition:all.2s;box-shadow:0 2px 8px rgba(0,0,0,.08)}
-.topbar button:hover{border-color:var(--b300);transform:translateY(-1px)}
+canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+#waveCanvas{top:auto;bottom:0;height:42%;width:100%;opacity:.38}
+
+/* lang */
+.lang{position:fixed;top:18px;right:18px;z-index:100;display:inline-flex;align-items:center;
+  border:1.5px solid var(--bd);border-radius:8px;overflow:hidden;background:var(--card);
+  box-shadow:0 2px 8px rgba(37,99,235,.08)}
+.lang button{padding:5px 11px;border:none;background:none;cursor:pointer;
+  font-family:'DM Sans',sans-serif;font-size:.71rem;font-weight:600;color:var(--t400);
+  transition:background .15s,color .15s;line-height:1.4}
+.lang button.on{background:var(--b500);color:#fff}
+.lsep{width:1px;height:18px;background:var(--bd);flex-shrink:0}
 
 /* layout */
-.wrap{position:relative;z-index:1;width:100%;max-width:620px;display:flex;flex-direction:column;align-items:center;padding-top:54px}
+.wrap{position:relative;z-index:1;width:100%;max-width:500px;
+  display:flex;flex-direction:column;align-items:center;padding-top:54px}
+
+/* header */
 .header{text-align:center;margin-bottom:26px;width:100%}
-.pill{display:inline-flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--b200);
-  border-radius:100px;padding:4px 12px;font-size:.67rem;font-weight:600;color:var(--b600);margin-bottom:14px}
+.pill{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--b200);
+  border-radius:100px;padding:4px 12px 4px 8px;font-size:.67rem;font-weight:600;color:var(--b600);
+  letter-spacing:.5px;text-transform:uppercase;margin-bottom:14px;
+  box-shadow:0 1px 6px rgba(37,99,235,.07)}
 .pdot{width:6px;height:6px;background:var(--b500);border-radius:50%;animation:pulse 2.2s ease-in-out infinite}
-@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.6);opacity:.4}}
-h1{font-family:'Syne',sans-serif;font-size:clamp(1.8rem,4.5vw,2.4rem);font-weight:800;letter-spacing:-.8px}
-.grad{background:linear-gradient(125deg,var(--b600),var(--b400));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.sub{margin-top:8px;font-size:.84rem;color:var(--t600)}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.6);opacity:.4}}
+
+h1{font-family:'Syne',sans-serif;font-size:clamp(1.8rem,4.5vw,2.4rem);
+  font-weight:800;line-height:1.18;letter-spacing:-.8px;color:var(--t900)}
+.grad{background:linear-gradient(125deg,var(--b600),var(--b400));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sub{margin-top:8px;font-size:.84rem;color:var(--t600);line-height:1.55}
+
+/* chips */
+.chips{display:flex;gap:7px;margin-bottom:20px;flex-wrap:wrap;justify-content:center}
+.chip{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--bd);
+  border-radius:8px;padding:6px 12px;font-size:.73rem;font-weight:500;color:var(--t600);
+  box-shadow:0 1px 3px rgba(37,99,235,.04)}
+.chip svg{width:13px;height:13px;flex-shrink:0;opacity:.65}
 
 /* card */
 .card{width:100%;background:var(--card);border:1px solid var(--bd);border-radius:var(--rlg);
-  padding:26px;box-shadow:var(--sh);position:relative;overflow:hidden;margin-bottom:20px}
+  padding:26px 26px 22px;box-shadow:var(--sh);position:relative;overflow:hidden}
 .card::before{content:'';position:absolute;top:0;left:0;right:0;height:2.5px;
-  background:linear-gradient(90deg,var(--b300),var(--b600),var(--b300));background-size:200% auto;animation:bar 3.5s linear infinite}
+  background:linear-gradient(90deg,var(--b300),var(--b600),var(--b300));
+  background-size:200% auto;animation:bar 3.5s linear infinite}
 @keyframes bar{to{background-position:200% center}}
+
+/* section */
 .sec{display:flex;align-items:center;gap:8px;margin-bottom:11px}
+.sec + .fg{margin-bottom:18px}
 .sico{width:26px;height:26px;border-radius:7px;background:var(--s2);border:1px solid var(--b100);
   display:flex;align-items:center;justify-content:center}
 .sico svg{width:13px;height:13px;color:var(--b500)}
-.slbl{font-family:'Syne',sans-serif;font-size:.67rem;font-weight:700;color:var(--b600);letter-spacing:.7px;text-transform:uppercase}
-.divider{height:1px;background:linear-gradient(90deg,var(--bd),transparent);margin:15px 0}
+.slbl{font-family:'Syne',sans-serif;font-size:.67rem;font-weight:700;
+  color:var(--b600);letter-spacing:.7px;text-transform:uppercase}
+.divider{height:1px;background:linear-gradient(90deg,var(--bd),transparent);margin-bottom:15px}
 
 /* form */
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.fg1{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.fg{display:flex;flex-direction:column;gap:12px}
+.fg1{display:flex;flex-direction:column;gap:5px}
+.fg + .sec{margin-top:18px}
 label.lbl{font-size:.67rem;font-weight:600;color:var(--t600);letter-spacing:.38px;text-transform:uppercase}
+
+/* input */
 .iw{position:relative}
-.iw svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--t400);pointer-events:none}
+.iw svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);
+  width:14px;height:14px;color:var(--t400);pointer-events:none;transition:color .18s}
 .iw:focus-within svg{color:var(--b500)}
-input,select{width:100%;padding:9px 12px 9px 33px;background:var(--s2);border:1.5px solid var(--bd);border-radius:var(--r);
-  color:var(--t900);font-family:'DM Sans',sans-serif;font-size:.86rem;outline:none;transition:border-color.18s,background.18s}
-select{padding-left:12px;cursor:pointer}
-input:focus,select:focus{border-color:var(--b500);box-shadow:0 0 0 3px rgba(59,130,246,.11);background:var(--card)}
+input[type=text],input[type=password]{width:100%;padding:9px 12px 9px 33px;
+  background:var(--s2);border:1.5px solid var(--bd);border-radius:var(--r);
+  color:var(--t900);font-family:'DM Sans',sans-serif;font-size:.86rem;font-weight:400;outline:none;
+  transition:border-color .18s,box-shadow .18s,background .18s}
+input::placeholder{color:var(--t400);font-weight:300}
+input:focus{border-color:var(--b500);box-shadow:0 0 0 3px rgba(59,130,246,.11);background:#fff}
 .hint{font-size:.66rem;color:var(--t400);margin-top:-4px}
-.iw button{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:4px}
-.iw button svg{position:static;transform:none;width:16px;height:16px}
 
 /* proxy toggle */
-.trow{display:flex;align-items:center;justify-content:space-between;border:1.5px solid;border-radius:var(--r);
-  padding:10px 13px;cursor:pointer;transition:all.22s}
-.trow.on{background:#fff7ed;border-color:#fed7aa}
+.trow{display:flex;align-items:center;justify-content:space-between;
+  border:1.5px solid;border-radius:var(--r);padding:10px 13px;cursor:pointer;
+  transition:background .22s,border-color .22s}
+.trow.on {background:#fff7ed;border-color:#fed7aa}
 .trow.off{background:var(--s2);border-color:var(--bd)}
-[data-theme="dark"].trow.on{background:#451a03;border-color:#c2410c}
-.tlbl{display:flex;align-items:center;gap:8px;font-size:.86rem;font-weight:500}
-.sw{position:relative;width:38px;height:21px}
+.trow.on:hover {background:#ffedd5;border-color:#fdba74}
+.trow.off:hover{background:var(--b100);border-color:var(--b200)}
+
+.tlbl{display:flex;align-items:center;gap:8px;font-size:.86rem;font-weight:500;color:var(--t900)}
+.tlbl svg{width:16px;height:16px;transition:color .22s}
+.trow.on  .tlbl svg{color:#f97316}
+.trow.off .tlbl svg{color:var(--t400)}
+
+.proxy-badge{font-size:.57rem;font-weight:700;padding:2px 6px;border-radius:4px;
+  transition:background .22s,color .22s;letter-spacing:.3px}
+.trow.on  .proxy-badge{background:#f97316;color:#fff}
+.trow.off .proxy-badge{background:#e2e8f0;color:#64748b}
+
+/* switch — orange when on, grey when off */
+.sw{position:relative;width:38px;height:21px;flex-shrink:0}
 .sw input{opacity:0;width:0;height:0}
-.sl{position:absolute;inset:0;background:#cbd5e1;border-radius:21px;cursor:pointer;transition:.24s}
-.sl::before{content:'';position:absolute;width:15px;height:15px;left:3px;bottom:3px;background:#fff;border-radius:50%;
-  transition:transform.24s cubic-bezier(.34,1.56,.64,1)}
-.sw input:checked +.sl{background:#f97316}
-.sw input:checked +.sl::before{transform:translateX(17px)}
+.sl{position:absolute;inset:0;background:#cbd5e1;border-radius:21px;cursor:pointer;transition:background .24s}
+.sl::before{content:'';position:absolute;width:15px;height:15px;left:3px;bottom:3px;
+  background:#fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.12);
+  transition:transform .24s cubic-bezier(.34,1.56,.64,1)}
+.sw input:checked + .sl{background:#f97316}
+.sw input:checked + .sl::before{transform:translateX(17px)}
 
 /* button */
 .btn{width:100%;padding:12px;background:linear-gradient(130deg,var(--b600),var(--b400));
-  border:none;border-radius:var(--r);color:#fff;font-family:'Syne',sans-serif;font-size:.88rem;font-weight:700;
-  cursor:pointer;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px;
-  transition:transform.18s,box-shadow.18s}
+  border:none;border-radius:var(--r);color:#fff;font-family:'Syne',sans-serif;
+  font-size:.88rem;font-weight:700;cursor:pointer;margin-top:4px;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  position:relative;overflow:hidden;transition:transform .18s,box-shadow .18s}
+.btn::after{content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent 30%,rgba(255,255,255,.13) 50%,transparent 70%);
+  background-size:200% auto;opacity:0;animation:shim 2.8s linear infinite;transition:opacity .24s}
+@keyframes shim{to{background-position:200% center}}
 .btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:var(--shb)}
+.btn:hover::after{opacity:1}
+.btn:active:not(:disabled){transform:none;box-shadow:none}
 .btn:disabled{opacity:.6;cursor:not-allowed}
-.btn svg{width:15px;height:15px}
-.btn.loading.sp{display:block}
-.btn.loading.bt{opacity:.7}
-.sp{display:none;width:15px;height:15px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin.6s linear infinite}
+.btn svg{width:15px;height:15px;flex-shrink:0}
+
+/* spinner — FIX: .btn.loading .sp (space required) */
+.sp{display:none;width:15px;height:15px;
+  border:2px solid rgba(255,255,255,.3);border-top-color:#fff;
+  border-radius:50%;animation:spin .6s linear infinite}
+.btn.loading .sp{display:block}
+.btn.loading .bt{opacity:.7}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* table */
-.table-wrap{overflow-x:auto;border:1px solid var(--bd);border-radius:var(--r);margin-top:12px}
-table{width:100%;border-collapse:collapse;font-size:.8rem}
-th{background:var(--s2);padding:10px;text-align:left;font-weight:600;color:var(--t600);border-bottom:1px solid var(--bd)}
-td{padding:10px;border-bottom:1px solid var(--bd)}
-tr:hover{background:var(--s2)}
-.del-btn{padding:4px 8px;background:#fee2e2;border:none;border-radius:6px;color:#dc2626;cursor:pointer;font-size:.7rem;font-weight:600}
-.del-btn:hover{background:#fecaca}
+.snote{margin-top:11px;text-align:center;font-size:.65rem;color:var(--t400);
+  display:flex;align-items:center;justify-content:center;gap:5px}
+.snote svg{width:12px;height:12px;opacity:.55}
 
-/* toast */
-.toast{position:fixed;top:20px;right:20px;z-index:999;padding:12px 16px;background:var(--card);
-  border:1px solid var(--bd);border-radius:8px;box-shadow:var(--sh);display:none;align-items:center;gap:8px;
-  animation:slideIn.3s ease-out}
-.toast.show{display:flex}
-.toast.ok{border-color:#86efac;background:#f0fdf4}
-.toast.err{border-color:#fca5a5;background:#fef2f2}
-@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+/* result — FIX: .result.ok .rh not .result.ok.rh */
+.result{width:100%;border-radius:var(--r);border:1.5px solid;
+  padding:18px 22px;margin-top:14px;display:none;
+  animation:up .34s cubic-bezier(.22,1,.36,1) both}
+@keyframes up{from{opacity:0;transform:translateY(11px)}to{opacity:1;transform:none}}
+.result.ok {background:#f0fdf4;border-color:#86efac}
+.result.err{background:#fef2f2;border-color:#fca5a5}
+.rh{display:flex;align-items:center;gap:7px;
+  font-family:'Syne',sans-serif;font-size:.79rem;font-weight:700;margin-bottom:12px}
+.result.ok  .rh{color:#16a34a}
+.result.err .rh{color:#dc2626}
+.ri0{width:21px;height:21px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ri0 svg{width:12px;height:12px}
+.result.ok  .ri0{background:#dcfce7;color:#16a34a}
+.result.err .ri0{background:#fee2e2;color:#dc2626}
 
-@media(max-width:640px){.grid2{grid-template-columns:1fr}}
+.rg{display:grid;grid-template-columns:1fr 1fr;gap:9px 16px;margin-bottom:13px}
+.ri label{font-size:.63rem;font-weight:600;color:var(--t400);text-transform:uppercase;
+  letter-spacing:.38px;display:block;margin-bottom:1px}
+.ri span{font-size:.84rem;font-weight:500;word-break:break-all}
+.em{font-size:.84rem;color:#dc2626;line-height:1.6}
+
+.cpbtn{padding:6px 13px;background:#fff;border:1.5px solid var(--bd);border-radius:7px;
+  color:var(--t600);font-family:'DM Sans',sans-serif;font-size:.75rem;font-weight:600;
+  cursor:pointer;display:inline-flex;align-items:center;gap:5px;
+  transition:background .14s,border-color .14s,color .14s,transform .12s}
+.cpbtn svg{width:12px;height:12px}
+.cpbtn:hover{background:var(--s2);border-color:var(--b300);color:var(--b600);transform:translateY(-1px)}
+
+@media(max-width:450px){
+  .card{padding:20px 14px 17px}
+  .rg{grid-template-columns:1fr}
+  .lang{top:12px;right:12px}
+}
 </style>
 </head>
 <body>
-<div class="blobs"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
-<div class="dotgrid"></div>
 
-<div class="topbar">
-  <button onclick="toggleTheme()">🌓 Theme</button>
+<div class="blobs" aria-hidden="true">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+</div>
+<div class="dotgrid" aria-hidden="true"></div>
+<canvas id="netCanvas" aria-hidden="true"></canvas>
+<canvas id="waveCanvas" aria-hidden="true"></canvas>
+
+<!-- lang -->
+<div class="lang">
   <button id="btnEN" class="on" onclick="setLang('en')">EN</button>
+  <div class="lsep"></div>
   <button id="btnID" onclick="setLang('id')">ID</button>
 </div>
 
 <div class="wrap">
-  <header class="header" data-aos="fade-down">
+
+  <!-- ── header ── -->
+  <header class="header" data-aos="fade-down" data-aos-duration="600">
     <div class="pill"><span class="pdot"></span>Cloudflare API v4</div>
     <h1><span class="grad">Subdomain</span> Creator</h1>
-    <p class="sub" id="tSub">Manage DNS records via Cloudflare API.</p>
+    <p class="sub" id="tSub">Add a DNS A record directly via Cloudflare API.</p>
   </header>
 
-  <!-- Form Card -->
-  <div class="card" data-aos="fade-up">
-    <div class="sec"><div class="sico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><span class="slbl" id="tSecAuth">Auth</span></div>
-    <div class="divider"></div>
-
-    <div class="fg1">
-      <label class="lbl" for="zoneId">Zone ID</label>
-      <div class="iw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
-      <input type="text" id="zoneId" placeholder="Zone ID"/></div>
+  <!-- ── chips ── -->
+  <div class="chips" data-aos="fade-up" data-aos-delay="70" data-aos-duration="520">
+    <div class="chip">
+      <!-- zap -->
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      API v4
     </div>
-
-    <div class="fg1">
-      <label class="lbl" for="apiKey" id="tLblKey">API Token</label>
-      <div class="iw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4"/></svg>
-      <input type="password" id="apiKey" placeholder="DNS:Edit scope"/>
-      <button type="button" onclick="togglePass()"><svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+    <div class="chip">
+      <!-- lock -->
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Bearer Token
     </div>
-
-    <div class="sec"><div class="sico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/></svg></div><span class="slbl" id="tSecDns">DNS Record</span></div>
-    <div class="divider"></div>
-
-    <div class="grid2">
-      <div class="fg1">
-        <label class="lbl" for="recordType">Type</label>
-        <select id="recordType">
-          <option value="A">A</option>
-          <option value="AAAA">AAAA</option>
-          <option value="CNAME">CNAME</option>
-          <option value="TXT">TXT</option>
-        </select>
-      </div>
-      <div class="fg1">
-        <label class="lbl" for="ttlSelect">TTL</label>
-        <select id="ttlSelect">
-          <option value="1">Auto</option>
-          <option value="120">120s</option>
-          <option value="300">300s</option>
-          <option value="600">600s</option>
-          <option value="3600">1h</option>
-        </select>
-      </div>
+    <div class="chip">
+      <!-- radio -->
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1"/></svg>
+      Type A
     </div>
-
-    <div class="fg1">
-      <label class="lbl" for="subdomainName" id="tLblSub">Name</label>
-      <div class="iw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/></svg>
-      <input type="text" id="subdomainName" placeholder="panel"/></div>
-      <p class="hint" id="tHintSub">Prefix only - domain from Zone ID</p>
+    <div class="chip">
+      <!-- cloud -->
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+      Proxy
     </div>
-
-    <div class="fg1">
-      <label class="lbl" for="ipTarget" id="tLblIp">Content/Value</label>
-      <div class="iw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/></svg>
-      <input type="text" id="ipTarget" placeholder="1.2.3.4"/></div>
-    </div>
-
-    <div class="trow on" id="proxyRow" onclick="toggleProxy()">
-      <span class="tlbl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg><span id="tLblProxy">Proxied</span></span>
-      <label class="sw" onclick="event.stopPropagation()"><input type="checkbox" id="proxied" checked onchange="syncProxy()"/><span class="sl"></span></label>
-    </div>
-
-    <button class="btn" id="btnCreate" type="button"><div class="sp"></div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14m-7-7 7 7-7 7"/></svg><span class="bt">Create Record</span></button>
-    <button class="btn" id="btnList" type="button" style="margin-top:8px;background:linear-gradient(130deg,#64748b,#94a3b8)"><div class="sp"></div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7M3 7l9 6 9-6"/></svg><span class="bt">Load Records</span></button>
   </div>
 
-  <!-- List Card -->
-  <div class="card" id="listCard" style="display:none" data-aos="fade-up">
-    <div class="sec"><div class="sico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7"/></svg></div><span class="slbl">DNS Records</span></div>
-    <div class="divider"></div>
-    <div class="table-wrap"><table id="recordsTable"><thead><tr><th>Type</th><th>Name</th><th>Content</th><th>Proxied</th><th>Action</th></tr></thead><tbody id="recordsBody"></tbody></table></div>
-  </div>
-</div>
+  <!-- ── card ── -->
+  <div class="card" data-aos="fade-up" data-aos-delay="120" data-aos-duration="580">
 
-<div class="toast" id="toast"><span id="toastText"></span></div>
+    <!-- auth section -->
+    <div class="sec" data-aos="fade-right" data-aos-delay="190">
+      <div class="sico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
+      <span class="slbl" id="tSecAuth">Auth</span>
+    </div>
+    <div class="divider"></div>
+
+    <div class="fg" data-aos="fade-up" data-aos-delay="220">
+      <div class="fg1">
+        <label class="lbl" for="zoneId">Zone ID</label>
+        <div class="iw">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <input type="text" id="zoneId" placeholder="Zone ID" autocomplete="off"/>
+        </div>
+      </div>
+      <div class="fg1">
+        <label class="lbl" for="apiKey" id="tLblKey">API Token</label>
+        <div class="iw">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+          <input type="password" id="apiKey" placeholder="DNS:Edit scope" autocomplete="new-password"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- dns section -->
+    <div class="sec" data-aos="fade-right" data-aos-delay="255">
+      <div class="sico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1"/></svg>
+      </div>
+      <span class="slbl" id="tSecDns">DNS Record</span>
+    </div>
+    <div class="divider"></div>
+
+    <div class="fg" data-aos="fade-up" data-aos-delay="285">
+      <div class="fg1">
+        <label class="lbl" for="subdomainName" id="tLblSub">Subdomain</label>
+        <div class="iw">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          <input type="text" id="subdomainName" placeholder="panel" autocomplete="off" spellcheck="false"/>
+        </div>
+        <p class="hint" id="tHintSub">Prefix only — domain resolved from Zone ID</p>
+      </div>
+
+      <div class="fg1">
+        <label class="lbl" for="ipTarget" id="tLblIp">Target IP</label>
+        <div class="iw">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>
+          <input type="text" id="ipTarget" placeholder="1.2.3.4" autocomplete="off"/>
+        </div>
+      </div>
+
+      <!-- proxy toggle: .on = orange, .off = grey -->
+      <div class="trow on" id="proxyRow" data-aos="fade-up" data-aos-delay="305" onclick="toggleProxy()">
+        <span class="tlbl">
+          <!-- cloud icon -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+          <span id="tLblProxy">Proxied</span>
+          <span class="proxy-badge" id="proxyBadge">ORANGE</span>
+        </span>
+        <label class="sw" onclick="event.stopPropagation()">
+          <input type="checkbox" id="proxied" checked onchange="syncProxy()"/>
+          <span class="sl"></span>
+        </label>
+      </div>
+
+      <button class="btn" id="btnSubmit" type="button" data-aos="zoom-in" data-aos-delay="325">
+        <div class="sp"></div>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
+        <span class="bt" id="tBtn">Create Subdomain</span>
+      </button>
+    </div>
+
+    <p class="snote">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <span id="tNote">Token sent directly to Cloudflare — never stored.</span>
+    </p>
+  </div>
+
+  <!-- result -->
+  <div class="result" id="resultBox">
+    <div class="rh"><div class="ri0" id="rIco"></div><span id="rTtl"></span></div>
+    <div id="rBdy"></div>
+  </div>
+
+</div><!-- /wrap -->
 
 <script>
-AOS.init({ once:true });
-const $ = id => document.getElementById(id);
-const LS = { z:'cf_zone', t:'cf_token', theme:'cf_theme' };
+AOS.init({ once: true, easing: 'ease-out-quart', offset: 10 });
 
-// Load saved
-$('zoneId').value = localStorage.getItem(LS.z) || '';
-$('apiKey').value = localStorage.getItem(LS.t) || '';
-const savedTheme = localStorage.getItem(LS.theme) || 'light';
-document.documentElement.setAttribute('data-theme', savedTheme);
+/* ── network canvas ── */
+(function () {
+  const cv = document.getElementById('netCanvas');
+  const cx = cv.getContext('2d');
+  let W, H, nd;
+  const N = 32, DIST = 125;
+  function resize() { W = cv.width = innerWidth; H = cv.height = innerHeight; }
+  function init() {
+    nd = Array.from({ length: N }, () => ({
+      x: Math.random() * W, y: Math.random() * H,
+      vx: (Math.random() - .5) * .28, vy: (Math.random() - .5) * .28,
+      r: Math.random() * 1.7 + 1,
+    }));
+  }
+  function frame() {
+    cx.clearRect(0, 0, W, H);
+    for (let i = 0; i < nd.length; i++) {
+      for (let j = i + 1; j < nd.length; j++) {
+        const dx = nd[i].x - nd[j].x, dy = nd[i].y - nd[j].y;
+        const d = Math.sqrt(dx * dx + dy * dy);
+        if (d < DIST) {
+          cx.beginPath();
+          cx.moveTo(nd[i].x, nd[i].y);
+          cx.lineTo(nd[j].x, nd[j].y);
+          cx.strokeStyle = `rgba(96,165,250,${.14 * (1 - d / DIST)})`;
+          cx.lineWidth = .65; cx.stroke();
+        }
+      }
+    }
+    nd.forEach(n => {
+      cx.beginPath(); cx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+      cx.fillStyle = 'rgba(96,165,250,.38)'; cx.fill();
+      n.x += n.vx; n.y += n.vy;
+      if (n.x < 0 || n.x > W) n.vx *= -1;
+      if (n.y < 0 || n.y > H) n.vy *= -1;
+    });
+    requestAnimationFrame(frame);
+  }
+  resize(); init(); frame();
+  window.addEventListener('resize', () => { resize(); init(); });
+})();
 
-// Theme
-function toggleTheme(){
-  const curr = document.documentElement.getAttribute('data-theme');
-  const next = curr === 'dark'? 'light' : 'dark';
-  document.documentElement.setAttribute('data-theme', next);
-  localStorage.setItem(LS.theme, next);
-  showToast('Theme switched', 'ok');
+/* ── wave canvas ── */
+(function () {
+  const cv = document.getElementById('waveCanvas');
+  const cx = cv.getContext('2d');
+  let W, t = 0;
+  const WS = [
+    { a: 22, f: .015, s: .85, c: 'rgba(147,197,253,.2)',  o: 0   },
+    { a: 14, f: .022, s: 1.2, c: 'rgba(96,165,250,.13)',  o: 1.5 },
+    { a: 9,  f: .03,  s: .6,  c: 'rgba(59,130,246,.08)',  o: 3.0 },
+  ];
+  function resize() { W = cv.width = innerWidth; cv.height = cv.offsetHeight; }
+  function frame() {
+    const H = cv.height; cx.clearRect(0, 0, W, H); t += .007;
+    WS.forEach(w => {
+      cx.beginPath(); cx.moveTo(0, H);
+      for (let x = 0; x <= W; x += 4)
+        cx.lineTo(x, H * .47 + Math.sin(x * w.f + t * w.s + w.o) * w.a);
+      cx.lineTo(W, H); cx.closePath();
+      cx.fillStyle = w.c; cx.fill();
+    });
+    requestAnimationFrame(frame);
+  }
+  resize(); frame();
+  window.addEventListener('resize', resize);
+})();
+
+/* ── i18n ── */
+let lang = 'en';
+const TX = {
+  en: {
+    tSub:      'Add a DNS A record directly via Cloudflare API.',
+    tSecAuth:  'Auth',
+    tSecDns:   'DNS Record',
+    tLblKey:   'API Token',
+    tLblSub:   'Subdomain',
+    tLblIp:    'Target IP',
+    tLblProxy: 'Proxied',
+    tBtn:      'Create Subdomain',
+    tHintSub:  'Prefix only — domain resolved from Zone ID',
+    tNote:     'Token sent directly to Cloudflare — never stored.',
+    eZone: 'Zone ID is required', eKey: 'API Token is required',
+    eSd: 'Subdomain is required', eSdFmt: 'Subdomain: letters, numbers, hyphens only',
+    eIp: 'Target IP is required', eIpFmt: 'Invalid IPv4 address',
+    valFail: 'Validation Failed', cfErr: 'Cloudflare Error', netErr: 'Request Failed',
+    netHint: 'Check that api.cloudflare.com is not blocked',
+    ok: 'Subdomain created', copied: '✓ Copied', cpyBtn: 'Copy JSON',
+  },
+  id: {
+    tSub:      'Tambah DNS record A langsung via Cloudflare API.',
+    tSecAuth:  'Autentikasi',
+    tSecDns:   'DNS Record',
+    tLblKey:   'API Token',
+    tLblSub:   'Subdomain',
+    tLblIp:    'IP Target',
+    tLblProxy: 'Proxied',
+    tBtn:      'Buat Subdomain',
+    tHintSub:  'Isi prefix saja — domain dari Zone ID',
+    tNote:     'Token dikirim langsung ke Cloudflare — tidak disimpan.',
+    eZone: 'Zone ID wajib diisi', eKey: 'API Token wajib diisi',
+    eSd: 'Subdomain wajib diisi', eSdFmt: 'Subdomain: huruf, angka, tanda hubung saja',
+    eIp: 'IP target wajib diisi', eIpFmt: 'Format IPv4 tidak valid',
+    valFail: 'Validasi Gagal', cfErr: 'Error Cloudflare', netErr: 'Request Gagal',
+    netHint: 'Pastikan api.cloudflare.com tidak diblokir',
+    ok: 'Subdomain berhasil dibuat', copied: '✓ Tersalin', cpyBtn: 'Copy JSON',
+  },
+};
+
+const TIDS = ['tSub','tSecAuth','tSecDns','tLblKey','tLblSub','tLblIp','tLblProxy','tBtn','tHintSub','tNote'];
+function setLang(l) {
+  lang = l;
+  document.getElementById('btnEN').classList.toggle('on', l === 'en');
+  document.getElementById('btnID').classList.toggle('on', l === 'id');
+  TIDS.forEach(id => { const el = document.getElementById(id); if (el) el.textContent = TX[l][id]; });
 }
+function t(k) { return TX[lang][k] || TX.en[k]; }
 
-// Password toggle
-function togglePass(){
-  const inp = $('apiKey');
-  inp.type = inp.type === 'password'? 'text' : 'password';
-}
+/* ── proxy toggle ── */
+const proxyRow   = document.getElementById('proxyRow');
+const proxiedEl  = document.getElementById('proxied');
+const proxyBadge = document.getElementById('proxyBadge');
 
-// Proxy toggle
-const proxyRow = $('proxyRow'), proxiedEl = $('proxied');
-function syncProxy(){
-  proxyRow.classList.toggle('on', proxiedEl.checked);
-  proxyRow.classList.toggle('off',!proxiedEl.checked);
-  $('tLblProxy').textContent = proxiedEl.checked? 'Proxied ON' : 'Proxied OFF';
+function syncProxy() {
+  const on = proxiedEl.checked;
+  proxyRow.classList.toggle('on',  on);
+  proxyRow.classList.toggle('off', !on);
+  proxyBadge.textContent = on ? 'ORANGE' : 'OFF';
 }
-function toggleProxy(){ proxiedEl.checked =!proxiedEl.checked; syncProxy(); }
+function toggleProxy() {
+  proxiedEl.checked = !proxiedEl.checked;
+  syncProxy();
+}
 syncProxy();
 
-// Toast
-function showToast(msg, type='ok'){
-  const t = $('toast');
-  $('toastText').textContent = msg;
-  t.className = `toast ${type} show`;
-  setTimeout(() => t.classList.remove('show'), 3000);
+/* ── refs ── */
+const $ = id => document.getElementById(id);
+const zEl  = $('zoneId'), tkEl = $('apiKey');
+const sdEl = $('subdomainName'), ipEl = $('ipTarget');
+const btn  = $('btnSubmit');
+const rBox = $('resultBox'), rIco = $('rIco'), rTtl = $('rTtl'), rBdy = $('rBdy');
+
+const LS = { z: 'cf_z' };
+zEl.value = localStorage.getItem(LS.z) || '';
+
+/* ── helpers ── */
+function validIP(ip) {
+  const p = ip.split('.');
+  return p.length === 4 && p.every(x => x !== '' && !isNaN(+x) && +x >= 0 && +x <= 255 && String(+x) === x);
+}
+const esc  = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const escQ = s => String(s).replace(/'/g,'&#39;');
+
+function setLoad(on) { btn.disabled = on; btn.classList.toggle('loading', on); }
+
+const SVG_OK  = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><polyline points="20 6 9 17 4 12"/></svg>`;
+const SVG_ERR = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+const SVG_CP  = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+
+function showResult(type, ico, title, body) {
+  rBox.className = `result ${type}`;
+  rBox.style.display = 'block';
+  rIco.innerHTML   = ico;
+  rTtl.textContent = title;
+  rBdy.innerHTML   = body;
+  rBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-// IP validation
-function validIP(ip, type){
-  if(type === 'A') return /^(\d{1,3}\.){3}\d{1,3}$/.test(ip) && ip.split('.').every(n => n<=255);
-  if(type === 'AAAA') return /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/.test(ip) || ip.includes('::');
-  return true;
-}
+window.copyJSON = id => {
+  const raw = document.getElementById(id)?.dataset.json || '';
+  navigator.clipboard.writeText(raw).then(() => {
+    const b = document.querySelector('.cpbtn');
+    if (b) {
+      b.textContent = t('copied');
+      setTimeout(() => { b.innerHTML = SVG_CP + t('cpyBtn'); }, 1500);
+    }
+  });
+};
 
-async function apiCall(action, data){
-  const zone = $('zoneId').value.trim();
-  const token = $('apiKey').value.trim();
-  if(!zone ||!token) throw new Error('Zone ID & Token required');
+/* ── submit ── */
+btn.addEventListener('click', async () => {
+  const zone = zEl.value.trim();
+  const tk   = tkEl.value.trim();
+  const sd   = sdEl.value.trim();
+  const ip   = ipEl.value.trim();
+  const prx  = proxiedEl.checked;
+
+  const errs = [];
+  if (!zone) errs.push(t('eZone'));
+  if (!tk)   errs.push(t('eKey'));
+  if (!sd)   errs.push(t('eSd'));
+  else if (!/^[a-zA-Z0-9*]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?$/.test(sd) && sd !== '*')
+             errs.push(t('eSdFmt'));
+  if (!ip)   errs.push(t('eIp'));
+  else if (!validIP(ip)) errs.push(t('eIpFmt'));
+
+  if (errs.length) {
+    showResult('err', SVG_ERR, t('valFail'),
+      errs.map(e => `<p class="em">· ${esc(e)}</p>`).join(''));
+    return;
+  }
 
   localStorage.setItem(LS.z, zone);
-  localStorage.setItem(LS.t, token);
+  setLoad(true);
+  rBox.style.display = 'none';
 
-  const form = new FormData();
-  form.append('action', action);
-  form.append('zone', zone);
-  form.append('token', token);
-  Object.entries(data).forEach(([k,v]) => form.append(k, v));
+  try {
+  const formData = new FormData();
 
-  const res = await fetch('/api', { method:'POST', body:form });
-  return res.json();
+  formData.append('zone', zone);
+  formData.append('token', tk);
+  formData.append('subdomain', sd);
+  formData.append('ip', ip);
+  formData.append('proxied', prx);
+
+  const res = await fetch('/api/proxy.js', {
+    method: 'POST',
+    body: formData
+  });
+
+  const data = await res.json();
+  const json = JSON.stringify(data, null, 2);
+
+  if (data.success) {
+    const r = data.result;
+
+    showResult('ok', SVG_OK, t('ok'),
+      `<div class="rg">
+        <div class="ri"><label>Subdomain</label><span>${esc(r.name)}</span></div>
+        <div class="ri"><label>Type</label><span>${esc(r.type)}</span></div>
+        <div class="ri"><label>IP</label><span>${esc(r.content)}</span></div>
+        <div class="ri"><label>Proxied</label><span>${r.proxied ? '✅ Yes' : '❌ No'}</span></div>
+        <div class="ri"><label>TTL</label><span>${r.ttl === 1 ? 'Auto' : r.ttl + 's'}</span></div>
+        <div class="ri"><label>Record ID</label><span style="font-size:.7rem;opacity:.55">${esc(r.id)}</span></div>
+      </div>
+      <span id="jh" data-json='${escQ(json)}'></span>
+      <button class="cpbtn" onclick="copyJSON('jh')">${SVG_CP}${t('cpyBtn')}</button>`
+    );
+
+  } else {
+
+    const em = data.errors?.[0]?.message || data.error || 'Unknown error';
+    const ec = data.errors?.[0]?.code ? ` (${data.errors[0].code})` : '';
+
+    showResult('err', SVG_ERR, t('cfErr'),
+      `<p class="em">${esc(em)}${ec}</p>
+       <span id="jh" data-json='${escQ(json)}'></span>
+       <button class="cpbtn" style="margin-top:10px" onclick="copyJSON('jh')">${SVG_CP}${t('cpyBtn')}</button>`
+    );
+  }
+
+} catch (e) {
+
+  showResult('err', SVG_ERR, t('netErr'),
+    `<p class="em">${esc(e.message)}</p>`
+  );
+
+} finally {
+  setLoad(false);
 }
-
-function setLoad(btn, on){
-  btn.disabled = on;
-  btn.classList.toggle('loading', on);
-}
-
-// CREATE
-$('btnCreate').addEventListener('click', async () => {
-  const btn = $('btnCreate');
-  const type = $('recordType').value;
-  const name = $('subdomainName').value.trim();
-  const content = $('ipTarget').value.trim();
-  const ttl = $('ttlSelect').value;
-  const proxied = proxiedEl.checked;
-
-  if(!name) return showToast('Name required', 'err');
-  if(type === 'A' &&!validIP(content, 'A')) return showToast('Invalid IPv4', 'err');
-  if(type === 'AAAA' &&!validIP(content, 'AAAA')) return showToast('Invalid IPv6', 'err');
-
-  setLoad(btn, true);
-  try{
-    const data = await apiCall('create', { subdomain:name, ip:content, proxied, type, ttl });
-    if(data.success){
-      showToast(`✓ ${data.result.name} created`, 'ok');
-      navigator.clipboard.writeText(data.result.name);
-      showToast('Copied to clipboard', 'ok');
-      $('subdomainName').value = '';
-      $('ipTarget').value = '';
-    } else {
-      showToast(data.errors?.[0]?.message || 'Failed', 'err');
-    }
-  } catch(e){ showToast(e.message, 'err'); }
-  setLoad(btn, false);
 });
-
-// LIST
-$('btnList').addEventListener('click', async () => {
-  const btn = $('btnList');
-  setLoad(btn, true);
-  try{
-    const data = await apiCall('list', {});
-    if(data.success){
-      const body = $('recordsBody');
-      body.innerHTML = data.result.map(r => `
-        <tr>
-          <td>${r.type}</td>
-          <td>${r.name}</td>
-          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">${r.content}</td>
-          <td>${r.proxied? 'Yes' : 'No'}</td>
-          <td><button class="del-btn" onclick="deleteRec('${r.id}')">Delete</button></td>
-        </tr>
-      `).join('');
-      $('listCard').style.display = 'block';
-      showToast(`${data.result.length} records loaded`, 'ok');
-    } else {
-      showToast(data.errors?.[0]?.message || 'Failed', 'err');
-    }
-  } catch(e){ showToast(e.message, 'err'); }
-  setLoad(btn, false);
-});
-
-// DELETE
-window.deleteRec = async (id) => {
-  if(!confirm('Delete this record?')) return;
-  try{
-    const data = await apiCall('delete', { record_id:id });
-    if(data.success){
-      showToast('Record deleted', 'ok');
-      $('btnList').click(); // refresh
-    } else {
-      showToast(data.errors?.[0]?.message || 'Failed', 'err');
-    }
-  } catch(e){ showToast(e.message, 'err'); }
-}
-
-// Hide proxy for TXT/CNAME
-$('recordType').addEventListener('change', e => {
-  proxyRow.style.display = e.target.value === 'TXT'? 'none' : 'flex';
-});
-
-// i18n basic
-let lang='en';
-const TX = {en:{tSub:'Manage DNS records via Cloudflare API',tSecAuth:'Auth',tSecDns:'DNS Record',tLblKey:'API Token',tLblSub:'Name',tLblIp:'Content/Value',tLblProxy:'Proxied',tHintSub:'Prefix only - domain from Zone ID'},
-id:{tSub:'Kelola DNS record via Cloudflare API',tSecAuth:'Autentikasi',tSecDns:'DNS Record',tLblKey:'API Token',tLblSub:'Nama',tLblIp:'Isi/Nilai',tLblProxy:'Proxied',tHintSub:'Isi prefix saja - domain dari Zone ID'}};
-function setLang(l){lang=l;document.getElementById('btnEN').classList.toggle('on',l==='en');document.getElementById('btnID').classList.toggle('on',l==='id');Object.keys(TX[l]).forEach(k=>{const el=$(k);if(el)el.textContent=TX[l][k]})}
 </script>
 </body>
 </html>
