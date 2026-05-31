@@ -25,7 +25,9 @@ module.exports = async (req, res) => {
 let zone, token, subdomain, ip, proxied, record_id;
 
     // Parse based on content type
+    const contentType = req.headers['content-type'] || '';
     if (contentType.includes('application/json')) {
+  if (contentType.includes('application/json')) {
   const body = JSON.parse(rawBody);
 
   action = body?.action || 'create';
@@ -37,10 +39,8 @@ let zone, token, subdomain, ip, proxied, record_id;
   ip = body?.ip || '';
 
   proxied = body?.proxied === 'true' || body?.proxied === true;
-}
-      
-      proxied = body?.proxied === 'true' || body?.proxied === true;
-    } else if (contentType.includes('application/x-www-form-urlencoded')) {
+
+} else if (contentType.includes('application/x-www-form-urlencoded')) {
       const params = new URLSearchParams(rawBody);
 
 action = params.get('action') || 'create';
