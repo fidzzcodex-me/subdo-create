@@ -1,7 +1,8 @@
 {
-  "functions": {
-    "proxy.php": {
-      "runtime": "vercel-php@0.7.4"
+  "rewrites": [
+    {
+      "source": "/proxy.php",
+      "destination": "/api/proxy.js"
     }
-  }
+  ]
 }
