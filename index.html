@@ -555,73 +555,60 @@ btn.addEventListener('click', async () => {
   setLoad(true);
   rBox.style.display = 'none';
 
-  const hdrs = { 'Authorization': `Bearer ${tk}`, 'Content-Type': 'application/json' };
-
-  /* step 1: resolve domain */
-  let domain = '';
   try {
-    const r = await fetch(
-      `https://api.cloudflare.com/client/v4/zones/${encodeURIComponent(zone)}`,
-      { headers: hdrs }
+  const formData = new FormData();
+
+  formData.append('zone', zone);
+  formData.append('token', tk);
+  formData.append('subdomain', sd);
+  formData.append('ip', ip);
+  formData.append('proxied', prx);
+
+  const res = await fetch('/api/proxy.js', {
+    method: 'POST',
+    body: formData
+  });
+
+  const data = await res.json();
+  const json = JSON.stringify(data, null, 2);
+
+  if (data.success) {
+    const r = data.result;
+
+    showResult('ok', SVG_OK, t('ok'),
+      `<div class="rg">
+        <div class="ri"><label>Subdomain</label><span>${esc(r.name)}</span></div>
+        <div class="ri"><label>Type</label><span>${esc(r.type)}</span></div>
+        <div class="ri"><label>IP</label><span>${esc(r.content)}</span></div>
+        <div class="ri"><label>Proxied</label><span>${r.proxied ? '✅ Yes' : '❌ No'}</span></div>
+        <div class="ri"><label>TTL</label><span>${r.ttl === 1 ? 'Auto' : r.ttl + 's'}</span></div>
+        <div class="ri"><label>Record ID</label><span style="font-size:.7rem;opacity:.55">${esc(r.id)}</span></div>
+      </div>
+      <span id="jh" data-json='${escQ(json)}'></span>
+      <button class="cpbtn" onclick="copyJSON('jh')">${SVG_CP}${t('cpyBtn')}</button>`
     );
-    const d = await r.json();
-    if (d.success) {
-      domain = d.result?.name || '';
-    } else {
-      const em = d.errors?.[0]?.message || 'Unknown error';
-      const ec = d.errors?.[0]?.code ? ` (${d.errors[0].code})` : '';
-      showResult('err', SVG_ERR, t('cfErr'), `<p class="em">${esc(em)}${ec}</p>`);
-      setLoad(false); return;
-    }
-  } catch (e) {
-    showResult('err', SVG_ERR, t('netErr'),
-      `<p class="em">${esc(e.message)}</p>
-       <p class="em" style="font-size:.74rem;opacity:.5;margin-top:4px">${t('netHint')}</p>`);
-    setLoad(false); return;
+
+  } else {
+
+    const em = data.errors?.[0]?.message || data.error || 'Unknown error';
+    const ec = data.errors?.[0]?.code ? ` (${data.errors[0].code})` : '';
+
+    showResult('err', SVG_ERR, t('cfErr'),
+      `<p class="em">${esc(em)}${ec}</p>
+       <span id="jh" data-json='${escQ(json)}'></span>
+       <button class="cpbtn" style="margin-top:10px" onclick="copyJSON('jh')">${SVG_CP}${t('cpyBtn')}</button>`
+    );
   }
 
-  /* step 2: create record */
-  const fullName = domain ? `${sd}.${domain}` : sd;
-  try {
-    const res = await fetch(
-      `https://api.cloudflare.com/client/v4/zones/${encodeURIComponent(zone)}/dns_records`,
-      { method: 'POST', headers: hdrs,
-        body: JSON.stringify({ type: 'A', name: fullName, content: ip, ttl: 120, proxied: prx }) }
-    );
-    const data = await res.json();
-    const json = JSON.stringify(data, null, 2);
+} catch (e) {
 
-    if (data.success) {
-      const r = data.result;
-      showResult('ok', SVG_OK, t('ok'),
-        `<div class="rg">
-          <div class="ri"><label>Subdomain</label><span>${esc(r.name)}</span></div>
-          <div class="ri"><label>Type</label><span>${esc(r.type)}</span></div>
-          <div class="ri"><label>IP</label><span>${esc(r.content)}</span></div>
-          <div class="ri"><label>Proxied</label><span>${r.proxied ? '✅ Yes' : '❌ No'}</span></div>
-          <div class="ri"><label>TTL</label><span>${r.ttl === 1 ? 'Auto' : r.ttl + 's'}</span></div>
-          <div class="ri"><label>Record ID</label><span style="font-size:.7rem;opacity:.55">${esc(r.id)}</span></div>
-        </div>
-        <span id="jh" data-json='${escQ(json)}'></span>
-        <button class="cpbtn" onclick="copyJSON('jh')">${SVG_CP}${t('cpyBtn')}</button>`
-      );
-    } else {
-      const em = data.errors?.[0]?.message || 'Unknown error';
-      const ec = data.errors?.[0]?.code ? ` (${data.errors[0].code})` : '';
-      showResult('err', SVG_ERR, t('cfErr'),
-        `<p class="em">${esc(em)}${ec}</p>
-         <span id="jh" data-json='${escQ(json)}'></span>
-         <button class="cpbtn" style="margin-top:10px" onclick="copyJSON('jh')">${SVG_CP}${t('cpyBtn')}</button>`
-      );
-    }
-  } catch (e) {
-    showResult('err', SVG_ERR, t('netErr'),
-      `<p class="em">${esc(e.message)}</p>
-       <p class="em" style="font-size:.74rem;opacity:.5;margin-top:4px">${t('netHint')}</p>`
-    );
-  } finally {
-    setLoad(false);
-  }
+  showResult('err', SVG_ERR, t('netErr'),
+    `<p class="em">${esc(e.message)}</p>`
+  );
+
+} finally {
+  setLoad(false);
+}
 });
 </script>
 </body>
