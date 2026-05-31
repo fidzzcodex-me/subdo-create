@@ -1,616 +1,1687 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>CF Subdomain Creator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css"/>
 <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
 <style>
+/* ═══════════════════════════════════════════
+   TOKENS
+═══════════════════════════════════════════ */
 :root {
-  --bg:#edf4fd; --card:#fff; --s2:#f4f9ff;
-  --b100:#dbeafe; --b200:#bfdbfe; --b300:#93c5fd; --b400:#60a5fa; --b500:#3b82f6; --b600:#2563eb;
-  --t900:#0f172a; --t600:#475569; --t400:#94a3b8; --bd:#e1eaf8;
-  --r:10px; --rlg:16px;
-  --sh:0 6px 28px rgba(37,99,235,.09),0 1px 4px rgba(37,99,235,.05);
-  --shb:0 4px 14px rgba(37,99,235,.28);
+  --r: 10px; --rlg: 16px; --rxl: 22px;
+  --trans: .22s cubic-bezier(.4,0,.2,1);
 }
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t900);
-  min-height:100vh;display:flex;flex-direction:column;align-items:center;
-  padding:0 16px 80px;overflow-x:hidden}
 
-/* bg */
-.blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
-.blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:.4;animation:drift 22s ease-in-out infinite alternate}
-.b1{width:480px;height:480px;background:radial-gradient(#bfdbfe,#93c5fd88);top:-80px;left:-60px}
-.b2{width:360px;height:360px;background:radial-gradient(#dbeafe,#c7d2fe55);top:38%;right:-70px;animation-delay:-9s;animation-duration:18s}
-.b3{width:280px;height:280px;background:radial-gradient(#e0f2fe,#bae6fd44);bottom:8%;left:18%;animation-delay:-15s;animation-duration:26s}
-@keyframes drift{0%{transform:translate(0,0) scale(1)}50%{transform:translate(18px,-12px) scale(1.03)}100%{transform:translate(-10px,16px) scale(.97)}}
+[data-theme="dark"] {
+  --bg:      #0b0f1a;
+  --bg2:     #0f1525;
+  --card:    #131929;
+  --card2:   #1a2236;
+  --border:  rgba(99,135,255,.13);
+  --border2: rgba(99,135,255,.22);
+  --t0:  #f0f4ff;
+  --t1:  #a8b8d8;
+  --t2:  #5a6a8a;
+  --b300:#6387ff;
+  --b400:#4f72f7;
+  --b500:#3a5de8;
+  --b600:#2847c9;
+  --acc: #00d4aa;
+  --acc2:#00b894;
+  --red: #ff4d6a;
+  --red2:#cc2f4a;
+  --amber:#f59e0b;
+  --sh: 0 8px 40px rgba(0,0,0,.55), 0 1px 0 rgba(99,135,255,.08);
+  --shb: 0 6px 28px rgba(63,99,255,.35);
+  --glow: 0 0 0 3px rgba(63,99,255,.18);
+}
+[data-theme="light"] {
+  --bg:      #edf4fd;
+  --bg2:     #f4f9ff;
+  --card:    #ffffff;
+  --card2:   #f4f9ff;
+  --border:  rgba(37,99,235,.12);
+  --border2: rgba(37,99,235,.25);
+  --t0:  #0f172a;
+  --t1:  #475569;
+  --t2:  #94a3b8;
+  --b300:#93c5fd;
+  --b400:#60a5fa;
+  --b500:#3b82f6;
+  --b600:#2563eb;
+  --acc: #059669;
+  --acc2:#047857;
+  --red: #ef4444;
+  --red2:#dc2626;
+  --amber:#d97706;
+  --sh: 0 6px 28px rgba(37,99,235,.09), 0 1px 4px rgba(37,99,235,.05);
+  --shb: 0 4px 14px rgba(37,99,235,.28);
+  --glow: 0 0 0 3px rgba(59,130,246,.14);
+}
 
-.dotgrid{position:fixed;inset:0;z-index:0;pointer-events:none;
-  background-image:radial-gradient(circle,#93c5fd2c 1px,transparent 1px);
-  background-size:27px 27px;
-  mask-image:radial-gradient(ellipse 70% 70% at 50% 40%,black,transparent)}
+/* ═══════════════════════════════════════════
+   RESET + BASE
+═══════════════════════════════════════════ */
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0 }
+html { scroll-behavior:smooth }
+body {
+  font-family:'Outfit',sans-serif;
+  background: var(--bg);
+  color: var(--t0);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 16px 100px;
+  overflow-x: hidden;
+  transition: background var(--trans), color var(--trans);
+}
 
-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
-#waveCanvas{top:auto;bottom:0;height:42%;width:100%;opacity:.38}
+/* ═══════════════════════════════════════════
+   BACKGROUND
+═══════════════════════════════════════════ */
+.bg-layer { position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden }
 
-/* lang */
-.lang{position:fixed;top:18px;right:18px;z-index:100;display:inline-flex;align-items:center;
-  border:1.5px solid var(--bd);border-radius:8px;overflow:hidden;background:var(--card);
-  box-shadow:0 2px 8px rgba(37,99,235,.08)}
-.lang button{padding:5px 11px;border:none;background:none;cursor:pointer;
-  font-family:'DM Sans',sans-serif;font-size:.71rem;font-weight:600;color:var(--t400);
-  transition:background .15s,color .15s;line-height:1.4}
-.lang button.on{background:var(--b500);color:#fff}
-.lsep{width:1px;height:18px;background:var(--bd);flex-shrink:0}
+/* grid lines */
+.bg-grid {
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 20%, transparent 80%);
+  opacity:.5;
+}
 
-/* layout */
-.wrap{position:relative;z-index:1;width:100%;max-width:500px;
-  display:flex;flex-direction:column;align-items:center;padding-top:54px}
+/* aurora blobs */
+.aurora {
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+}
+.aurora-blob {
+  position:absolute; border-radius:50%;
+  filter:blur(120px); animation:aurora-drift 20s ease-in-out infinite alternate;
+}
+[data-theme="dark"] .ab1 { width:600px;height:400px;background:radial-gradient(#1e3cff22,transparent 70%);top:-100px;left:-150px }
+[data-theme="dark"] .ab2 { width:500px;height:500px;background:radial-gradient(#00d4aa18,transparent 70%);top:30%;right:-200px;animation-delay:-8s;animation-duration:25s }
+[data-theme="dark"] .ab3 { width:400px;height:300px;background:radial-gradient(#6b21ff14,transparent 70%);bottom:0;left:20%;animation-delay:-14s;animation-duration:18s }
+[data-theme="light"] .ab1 { width:600px;height:400px;background:radial-gradient(#bfdbfe55,transparent 70%);top:-100px;left:-150px }
+[data-theme="light"] .ab2 { width:500px;height:500px;background:radial-gradient(#d1fae544,transparent 70%);top:30%;right:-200px;animation-delay:-8s;animation-duration:25s }
+[data-theme="light"] .ab3 { width:400px;height:300px;background:radial-gradient(#c7d2fe33,transparent 70%);bottom:0;left:20%;animation-delay:-14s;animation-duration:18s }
 
-/* header */
-.header{text-align:center;margin-bottom:26px;width:100%}
-.pill{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--b200);
-  border-radius:100px;padding:4px 12px 4px 8px;font-size:.67rem;font-weight:600;color:var(--b600);
-  letter-spacing:.5px;text-transform:uppercase;margin-bottom:14px;
-  box-shadow:0 1px 6px rgba(37,99,235,.07)}
-.pdot{width:6px;height:6px;background:var(--b500);border-radius:50%;animation:pulse 2.2s ease-in-out infinite}
-@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.6);opacity:.4}}
+@keyframes aurora-drift {
+  0%   { transform:translate(0,0) scale(1) }
+  50%  { transform:translate(30px,-20px) scale(1.05) }
+  100% { transform:translate(-15px,25px) scale(.95) }
+}
 
-h1{font-family:'Syne',sans-serif;font-size:clamp(1.8rem,4.5vw,2.4rem);
-  font-weight:800;line-height:1.18;letter-spacing:-.8px;color:var(--t900)}
-.grad{background:linear-gradient(125deg,var(--b600),var(--b400));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.sub{margin-top:8px;font-size:.84rem;color:var(--t600);line-height:1.55}
+canvas#netCanvas { position:fixed;inset:0;z-index:0;pointer-events:none }
+
+/* ═══════════════════════════════════════════
+   TOP BAR
+═══════════════════════════════════════════ */
+.topbar {
+  position:fixed; top:0; left:0; right:0; z-index:200;
+  height:52px; display:flex; align-items:center; justify-content:space-between;
+  padding:0 20px;
+  background: var(--card);
+  border-bottom:1px solid var(--border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.topbar-brand {
+  display:flex; align-items:center; gap:9px;
+  font-family:'DM Mono',monospace; font-size:.78rem; font-weight:500; color:var(--t1);
+  letter-spacing:-.2px;
+}
+.brand-dot {
+  width:28px; height:28px; border-radius:8px;
+  background:linear-gradient(135deg,var(--b500),var(--acc));
+  display:flex; align-items:center; justify-content:center;
+  box-shadow: 0 2px 10px rgba(63,99,255,.3);
+}
+.brand-dot svg { width:14px;height:14px;color:#fff }
+
+.topbar-right { display:flex; align-items:center; gap:8px }
+
+.lang-sw {
+  display:inline-flex; align-items:center;
+  border:1px solid var(--border2); border-radius:8px; overflow:hidden;
+  background:var(--card2);
+}
+.lang-sw button {
+  padding:4px 10px; border:none; background:none; cursor:pointer;
+  font-family:'Outfit',sans-serif; font-size:.69rem; font-weight:600;
+  color:var(--t2); transition:background var(--trans),color var(--trans);
+}
+.lang-sw button.on { background:var(--b500); color:#fff }
+.lsep { width:1px; height:16px; background:var(--border2) }
+
+/* theme toggle */
+.theme-btn {
+  width:34px; height:34px; border-radius:9px;
+  border:1px solid var(--border2);
+  background:var(--card2);
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  transition:all var(--trans); color:var(--t1);
+}
+.theme-btn:hover { background:var(--card); border-color:var(--b400); color:var(--t0) }
+.theme-btn svg { width:15px; height:15px }
+.icon-sun { display:none }
+.icon-moon { display:block }
+[data-theme="light"] .icon-sun  { display:block }
+[data-theme="light"] .icon-moon { display:none }
+
+/* ═══════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════ */
+.wrap {
+  position:relative; z-index:1;
+  width:100%; max-width:560px;
+  display:flex; flex-direction:column; align-items:center;
+  padding-top:80px;
+}
+
+/* ═══════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════ */
+.header { text-align:center; margin-bottom:28px; width:100% }
+
+.pill {
+  display:inline-flex; align-items:center; gap:6px;
+  background:var(--card2); border:1px solid var(--border2);
+  border-radius:100px; padding:4px 13px 4px 9px;
+  font-family:'DM Mono',monospace;
+  font-size:.63rem; font-weight:500; color:var(--b300);
+  letter-spacing:.4px; text-transform:uppercase; margin-bottom:16px;
+  box-shadow:0 1px 8px rgba(63,99,255,.08);
+}
+.pdot {
+  width:6px; height:6px; background:var(--acc);
+  border-radius:50%; animation:pulse 2.2s ease-in-out infinite;
+  box-shadow:0 0 0 0 var(--acc);
+}
+@keyframes pulse {
+  0%,100% { transform:scale(1); box-shadow:0 0 0 0 rgba(0,212,170,.4) }
+  50%      { transform:scale(1.5); box-shadow:0 0 0 5px rgba(0,212,170,0) }
+}
+
+h1 {
+  font-size:clamp(2rem,5vw,2.7rem);
+  font-weight:800; line-height:1.15; letter-spacing:-1.2px; color:var(--t0);
+}
+.grad {
+  background:linear-gradient(125deg,var(--b400),var(--acc));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+}
+.sub { margin-top:9px; font-size:.85rem; color:var(--t1); line-height:1.6; font-weight:300 }
 
 /* chips */
-.chips{display:flex;gap:7px;margin-bottom:20px;flex-wrap:wrap;justify-content:center}
-.chip{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--bd);
-  border-radius:8px;padding:6px 12px;font-size:.73rem;font-weight:500;color:var(--t600);
-  box-shadow:0 1px 3px rgba(37,99,235,.04)}
-.chip svg{width:13px;height:13px;flex-shrink:0;opacity:.65}
-
-/* card */
-.card{width:100%;background:var(--card);border:1px solid var(--bd);border-radius:var(--rlg);
-  padding:26px 26px 22px;box-shadow:var(--sh);position:relative;overflow:hidden}
-.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2.5px;
-  background:linear-gradient(90deg,var(--b300),var(--b600),var(--b300));
-  background-size:200% auto;animation:bar 3.5s linear infinite}
-@keyframes bar{to{background-position:200% center}}
-
-/* section */
-.sec{display:flex;align-items:center;gap:8px;margin-bottom:11px}
-.sec + .fg{margin-bottom:18px}
-.sico{width:26px;height:26px;border-radius:7px;background:var(--s2);border:1px solid var(--b100);
-  display:flex;align-items:center;justify-content:center}
-.sico svg{width:13px;height:13px;color:var(--b500)}
-.slbl{font-family:'Syne',sans-serif;font-size:.67rem;font-weight:700;
-  color:var(--b600);letter-spacing:.7px;text-transform:uppercase}
-.divider{height:1px;background:linear-gradient(90deg,var(--bd),transparent);margin-bottom:15px}
-
-/* form */
-.fg{display:flex;flex-direction:column;gap:12px}
-.fg1{display:flex;flex-direction:column;gap:5px}
-.fg + .sec{margin-top:18px}
-label.lbl{font-size:.67rem;font-weight:600;color:var(--t600);letter-spacing:.38px;text-transform:uppercase}
-
-/* input */
-.iw{position:relative}
-.iw svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);
-  width:14px;height:14px;color:var(--t400);pointer-events:none;transition:color .18s}
-.iw:focus-within svg{color:var(--b500)}
-input[type=text],input[type=password]{width:100%;padding:9px 12px 9px 33px;
-  background:var(--s2);border:1.5px solid var(--bd);border-radius:var(--r);
-  color:var(--t900);font-family:'DM Sans',sans-serif;font-size:.86rem;font-weight:400;outline:none;
-  transition:border-color .18s,box-shadow .18s,background .18s}
-input::placeholder{color:var(--t400);font-weight:300}
-input:focus{border-color:var(--b500);box-shadow:0 0 0 3px rgba(59,130,246,.11);background:#fff}
-.hint{font-size:.66rem;color:var(--t400);margin-top:-4px}
-
-/* proxy toggle */
-.trow{display:flex;align-items:center;justify-content:space-between;
-  border:1.5px solid;border-radius:var(--r);padding:10px 13px;cursor:pointer;
-  transition:background .22s,border-color .22s}
-.trow.on {background:#fff7ed;border-color:#fed7aa}
-.trow.off{background:var(--s2);border-color:var(--bd)}
-.trow.on:hover {background:#ffedd5;border-color:#fdba74}
-.trow.off:hover{background:var(--b100);border-color:var(--b200)}
-
-.tlbl{display:flex;align-items:center;gap:8px;font-size:.86rem;font-weight:500;color:var(--t900)}
-.tlbl svg{width:16px;height:16px;transition:color .22s}
-.trow.on  .tlbl svg{color:#f97316}
-.trow.off .tlbl svg{color:var(--t400)}
-
-.proxy-badge{font-size:.57rem;font-weight:700;padding:2px 6px;border-radius:4px;
-  transition:background .22s,color .22s;letter-spacing:.3px}
-.trow.on  .proxy-badge{background:#f97316;color:#fff}
-.trow.off .proxy-badge{background:#e2e8f0;color:#64748b}
-
-/* switch — orange when on, grey when off */
-.sw{position:relative;width:38px;height:21px;flex-shrink:0}
-.sw input{opacity:0;width:0;height:0}
-.sl{position:absolute;inset:0;background:#cbd5e1;border-radius:21px;cursor:pointer;transition:background .24s}
-.sl::before{content:'';position:absolute;width:15px;height:15px;left:3px;bottom:3px;
-  background:#fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.12);
-  transition:transform .24s cubic-bezier(.34,1.56,.64,1)}
-.sw input:checked + .sl{background:#f97316}
-.sw input:checked + .sl::before{transform:translateX(17px)}
-
-/* button */
-.btn{width:100%;padding:12px;background:linear-gradient(130deg,var(--b600),var(--b400));
-  border:none;border-radius:var(--r);color:#fff;font-family:'Syne',sans-serif;
-  font-size:.88rem;font-weight:700;cursor:pointer;margin-top:4px;
-  display:flex;align-items:center;justify-content:center;gap:8px;
-  position:relative;overflow:hidden;transition:transform .18s,box-shadow .18s}
-.btn::after{content:'';position:absolute;inset:0;
-  background:linear-gradient(90deg,transparent 30%,rgba(255,255,255,.13) 50%,transparent 70%);
-  background-size:200% auto;opacity:0;animation:shim 2.8s linear infinite;transition:opacity .24s}
-@keyframes shim{to{background-position:200% center}}
-.btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:var(--shb)}
-.btn:hover::after{opacity:1}
-.btn:active:not(:disabled){transform:none;box-shadow:none}
-.btn:disabled{opacity:.6;cursor:not-allowed}
-.btn svg{width:15px;height:15px;flex-shrink:0}
-
-/* spinner — FIX: .btn.loading .sp (space required) */
-.sp{display:none;width:15px;height:15px;
-  border:2px solid rgba(255,255,255,.3);border-top-color:#fff;
-  border-radius:50%;animation:spin .6s linear infinite}
-.btn.loading .sp{display:block}
-.btn.loading .bt{opacity:.7}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-.snote{margin-top:11px;text-align:center;font-size:.65rem;color:var(--t400);
-  display:flex;align-items:center;justify-content:center;gap:5px}
-.snote svg{width:12px;height:12px;opacity:.55}
-
-/* result — FIX: .result.ok .rh not .result.ok.rh */
-.result{width:100%;border-radius:var(--r);border:1.5px solid;
-  padding:18px 22px;margin-top:14px;display:none;
-  animation:up .34s cubic-bezier(.22,1,.36,1) both}
-@keyframes up{from{opacity:0;transform:translateY(11px)}to{opacity:1;transform:none}}
-.result.ok {background:#f0fdf4;border-color:#86efac}
-.result.err{background:#fef2f2;border-color:#fca5a5}
-.rh{display:flex;align-items:center;gap:7px;
-  font-family:'Syne',sans-serif;font-size:.79rem;font-weight:700;margin-bottom:12px}
-.result.ok  .rh{color:#16a34a}
-.result.err .rh{color:#dc2626}
-.ri0{width:21px;height:21px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.ri0 svg{width:12px;height:12px}
-.result.ok  .ri0{background:#dcfce7;color:#16a34a}
-.result.err .ri0{background:#fee2e2;color:#dc2626}
-
-.rg{display:grid;grid-template-columns:1fr 1fr;gap:9px 16px;margin-bottom:13px}
-.ri label{font-size:.63rem;font-weight:600;color:var(--t400);text-transform:uppercase;
-  letter-spacing:.38px;display:block;margin-bottom:1px}
-.ri span{font-size:.84rem;font-weight:500;word-break:break-all}
-.em{font-size:.84rem;color:#dc2626;line-height:1.6}
-
-.cpbtn{padding:6px 13px;background:#fff;border:1.5px solid var(--bd);border-radius:7px;
-  color:var(--t600);font-family:'DM Sans',sans-serif;font-size:.75rem;font-weight:600;
-  cursor:pointer;display:inline-flex;align-items:center;gap:5px;
-  transition:background .14s,border-color .14s,color .14s,transform .12s}
-.cpbtn svg{width:12px;height:12px}
-.cpbtn:hover{background:var(--s2);border-color:var(--b300);color:var(--b600);transform:translateY(-1px)}
-
-@media(max-width:450px){
-  .card{padding:20px 14px 17px}
-  .rg{grid-template-columns:1fr}
-  .lang{top:12px;right:12px}
+.chips { display:flex; gap:7px; margin-bottom:22px; flex-wrap:wrap; justify-content:center }
+.chip {
+  display:flex; align-items:center; gap:6px;
+  background:var(--card2); border:1px solid var(--border);
+  border-radius:8px; padding:5px 11px;
+  font-family:'DM Mono',monospace; font-size:.68rem; font-weight:400; color:var(--t1);
+  transition:all var(--trans);
 }
+.chip:hover { border-color:var(--border2); color:var(--t0) }
+.chip svg { width:12px;height:12px;flex-shrink:0;opacity:.7 }
+
+/* ═══════════════════════════════════════════
+   TABS
+═══════════════════════════════════════════ */
+.tabs {
+  display:flex; gap:2px;
+  background:var(--card2); border:1px solid var(--border);
+  border-radius:var(--rlg); padding:4px;
+  margin-bottom:18px; width:100%;
+}
+.tab {
+  flex:1; padding:9px 12px;
+  border:none; border-radius:calc(var(--rlg) - 3px);
+  background:none; cursor:pointer; color:var(--t1);
+  font-family:'Outfit',sans-serif; font-size:.8rem; font-weight:600;
+  display:flex; align-items:center; justify-content:center; gap:6px;
+  transition:all var(--trans);
+}
+.tab svg { width:13px;height:13px;flex-shrink:0 }
+.tab:hover:not(.active) { background:var(--border); color:var(--t0) }
+.tab.active { background:var(--card); color:var(--t0); box-shadow:var(--sh) }
+.tab-panel { display:none; width:100% }
+.tab-panel.active { display:block }
+
+/* ═══════════════════════════════════════════
+   CARD
+═══════════════════════════════════════════ */
+.card {
+  width:100%;
+  background:var(--card);
+  border:1px solid var(--border2);
+  border-radius:var(--rxl);
+  padding:28px 28px 24px;
+  box-shadow:var(--sh);
+  position:relative; overflow:hidden;
+  transition:background var(--trans), border-color var(--trans), box-shadow var(--trans);
+}
+.card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px;
+  background:linear-gradient(90deg,transparent,var(--b400),var(--acc),var(--b400),transparent);
+  background-size:200% auto; animation:bar 4s linear infinite;
+}
+@keyframes bar { to { background-position:200% center } }
+
+/* section headers */
+.sec {
+  display:flex; align-items:center; gap:9px;
+  margin-bottom:12px;
+}
+.sico {
+  width:28px; height:28px; border-radius:8px;
+  background:var(--card2); border:1px solid var(--border2);
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.sico svg { width:13px;height:13px;color:var(--b400) }
+.slbl {
+  font-family:'DM Mono',monospace; font-size:.64rem; font-weight:500;
+  color:var(--b300); letter-spacing:.6px; text-transform:uppercase;
+}
+.divider {
+  height:1px;
+  background:linear-gradient(90deg,var(--border2),transparent);
+  margin-bottom:16px;
+}
+
+/* ═══════════════════════════════════════════
+   FORM
+═══════════════════════════════════════════ */
+.fg  { display:flex; flex-direction:column; gap:13px }
+.fg1 { display:flex; flex-direction:column; gap:5px }
+.fg-row { display:grid; grid-template-columns:1fr 1fr; gap:13px }
+.fg + .sec { margin-top:20px }
+
+label.lbl {
+  font-size:.64rem; font-weight:600; color:var(--t2);
+  letter-spacing:.4px; text-transform:uppercase;
+}
+
+.iw { position:relative }
+.iw-icon {
+  position:absolute; left:11px; top:50%; transform:translateY(-50%);
+  width:14px; height:14px; color:var(--t2); pointer-events:none;
+  transition:color var(--trans); flex-shrink:0;
+}
+.iw:focus-within .iw-icon { color:var(--b400) }
+
+.pw-toggle {
+  position:absolute; right:10px; top:50%; transform:translateY(-50%);
+  width:28px; height:28px; border:none; background:none;
+  cursor:pointer; color:var(--t2); display:flex; align-items:center; justify-content:center;
+  border-radius:6px; transition:color var(--trans), background var(--trans);
+}
+.pw-toggle:hover { color:var(--t0); background:var(--border) }
+.pw-toggle svg { width:14px;height:14px }
+
+input[type=text],input[type=password],select,textarea {
+  width:100%; padding:10px 13px 10px 35px;
+  background:var(--card2); border:1.5px solid var(--border);
+  border-radius:var(--r); color:var(--t0);
+  font-family:'Outfit',sans-serif; font-size:.86rem; font-weight:400;
+  outline:none; transition:all var(--trans);
+  -webkit-appearance:none; appearance:none;
+}
+input::placeholder,textarea::placeholder { color:var(--t2); font-weight:300 }
+input:focus,select:focus,textarea:focus {
+  border-color:var(--b400);
+  box-shadow:var(--glow);
+  background:var(--card);
+}
+select { padding-left:35px; cursor:pointer }
+select option { background:var(--card); color:var(--t0) }
+textarea { padding-left:13px; resize:vertical; min-height:70px }
+input[type=password] { padding-right:42px }
+
+.hint {
+  font-size:.65rem; color:var(--t2); margin-top:-3px;
+  font-family:'DM Mono',monospace;
+}
+
+/* ═══════════════════════════════════════════
+   RECORD TYPE SELECTOR
+═══════════════════════════════════════════ */
+.type-pills {
+  display:flex; gap:6px; flex-wrap:wrap;
+}
+.type-pill {
+  padding:5px 13px; border-radius:7px;
+  border:1.5px solid var(--border2);
+  background:var(--card2); color:var(--t1);
+  font-family:'DM Mono',monospace; font-size:.71rem; font-weight:500;
+  cursor:pointer; transition:all var(--trans);
+}
+.type-pill:hover { border-color:var(--b400); color:var(--t0) }
+.type-pill.active {
+  background:var(--b500); border-color:var(--b400); color:#fff;
+  box-shadow:0 2px 10px rgba(63,99,255,.3);
+}
+
+/* ═══════════════════════════════════════════
+   PROXY TOGGLE ROW
+═══════════════════════════════════════════ */
+.trow {
+  display:flex; align-items:center; justify-content:space-between;
+  border:1.5px solid; border-radius:var(--r); padding:10px 14px;
+  cursor:pointer; transition:all var(--trans);
+}
+.trow.on  { background:rgba(245,158,11,.07); border-color:rgba(245,158,11,.3) }
+.trow.off { background:var(--card2); border-color:var(--border) }
+.trow.on:hover  { background:rgba(245,158,11,.11); border-color:rgba(245,158,11,.45) }
+.trow.off:hover { background:var(--card); border-color:var(--border2) }
+
+.tlbl { display:flex; align-items:center; gap:8px; font-size:.85rem; font-weight:500; color:var(--t0) }
+.tlbl svg { width:16px;height:16px;transition:color var(--trans) }
+.trow.on  .tlbl svg { color:var(--amber) }
+.trow.off .tlbl svg { color:var(--t2) }
+
+.proxy-badge {
+  font-family:'DM Mono',monospace;
+  font-size:.58rem; font-weight:500; padding:2px 7px;
+  border-radius:5px; transition:all var(--trans); letter-spacing:.3px;
+}
+.trow.on  .proxy-badge { background:rgba(245,158,11,.2); color:var(--amber) }
+.trow.off .proxy-badge { background:var(--border); color:var(--t2) }
+
+/* switch */
+.sw { position:relative; width:38px; height:21px; flex-shrink:0 }
+.sw input { opacity:0; width:0; height:0 }
+.sl {
+  position:absolute; inset:0; background:var(--t2);
+  border-radius:21px; cursor:pointer; transition:background var(--trans);
+}
+.sl::before {
+  content:''; position:absolute; width:15px; height:15px;
+  left:3px; bottom:3px; background:#fff; border-radius:50%;
+  box-shadow:0 1px 4px rgba(0,0,0,.2);
+  transition:transform .24s cubic-bezier(.34,1.56,.64,1);
+}
+.sw input:checked + .sl { background:var(--amber) }
+.sw input:checked + .sl::before { transform:translateX(17px) }
+
+/* ═══════════════════════════════════════════
+   BUTTON
+═══════════════════════════════════════════ */
+.btn {
+  width:100%; padding:12px 20px;
+  background:linear-gradient(130deg,var(--b600),var(--b400));
+  border:1px solid rgba(99,135,255,.25);
+  border-radius:var(--r); color:#fff;
+  font-family:'Outfit',sans-serif; font-size:.9rem; font-weight:700;
+  cursor:pointer; margin-top:6px;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  position:relative; overflow:hidden;
+  transition:transform var(--trans), box-shadow var(--trans), filter var(--trans);
+  letter-spacing:.1px;
+}
+.btn::after {
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(90deg,transparent 25%,rgba(255,255,255,.12) 50%,transparent 75%);
+  background-size:200% auto; opacity:0;
+  animation:shim 3s linear infinite; transition:opacity var(--trans);
+}
+@keyframes shim { to { background-position:200% center } }
+.btn:hover:not(:disabled) {
+  transform:translateY(-2px);
+  box-shadow:var(--shb);
+  filter:brightness(1.08);
+}
+.btn:hover::after { opacity:1 }
+.btn:active:not(:disabled) { transform:translateY(0); box-shadow:none }
+.btn:disabled { opacity:.55; cursor:not-allowed }
+.btn svg { width:15px;height:15px;flex-shrink:0 }
+
+.btn-secondary {
+  background:var(--card2); color:var(--t1);
+  border:1.5px solid var(--border2);
+  box-shadow:none;
+}
+.btn-secondary:hover:not(:disabled) {
+  background:var(--card); color:var(--t0);
+  border-color:var(--b400); box-shadow:var(--sh);
+  filter:none;
+}
+
+.btn-danger {
+  background:linear-gradient(130deg,var(--red2),var(--red));
+  border-color:rgba(255,77,106,.25);
+}
+.btn-danger:hover:not(:disabled) { box-shadow:0 6px 20px rgba(255,77,106,.3) }
+
+/* spinner */
+.sp {
+  display:none; width:15px; height:15px;
+  border:2px solid rgba(255,255,255,.25); border-top-color:#fff;
+  border-radius:50%; animation:spin .6s linear infinite;
+}
+.btn.loading .sp { display:block }
+.btn.loading .bt { opacity:.7 }
+@keyframes spin { to { transform:rotate(360deg) } }
+
+.btn-sm {
+  padding:6px 12px; font-size:.75rem; font-weight:600;
+  border-radius:8px; margin-top:0;
+}
+
+/* note */
+.snote {
+  margin-top:12px; text-align:center;
+  font-size:.64rem; color:var(--t2);
+  display:flex; align-items:center; justify-content:center; gap:5px;
+  font-family:'DM Mono',monospace;
+}
+.snote svg { width:11px;height:11px;opacity:.5 }
+
+/* ═══════════════════════════════════════════
+   RESULT BOX
+═══════════════════════════════════════════ */
+.result {
+  width:100%; border-radius:var(--r); border:1.5px solid;
+  padding:18px 22px; margin-top:14px; display:none;
+  animation:slide-up .34s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes slide-up {
+  from { opacity:0; transform:translateY(12px) }
+  to   { opacity:1; transform:none }
+}
+.result.ok  { background:rgba(0,212,170,.05); border-color:rgba(0,212,170,.25) }
+.result.err { background:rgba(255,77,106,.05); border-color:rgba(255,77,106,.25) }
+
+.rh {
+  display:flex; align-items:center; gap:8px;
+  font-family:'Outfit',sans-serif;
+  font-size:.8rem; font-weight:700; margin-bottom:13px;
+}
+.result.ok  .rh { color:var(--acc) }
+.result.err .rh { color:var(--red) }
+.ri0 {
+  width:22px; height:22px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.ri0 svg { width:12px;height:12px }
+.result.ok  .ri0 { background:rgba(0,212,170,.15); color:var(--acc) }
+.result.err .ri0 { background:rgba(255,77,106,.15); color:var(--red) }
+
+.rg {
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:9px 18px; margin-bottom:14px;
+}
+.ri label {
+  font-size:.6rem; font-weight:600; color:var(--t2);
+  text-transform:uppercase; letter-spacing:.4px; display:block; margin-bottom:1px;
+}
+.ri span {
+  font-family:'DM Mono',monospace;
+  font-size:.82rem; font-weight:400; color:var(--t0); word-break:break-all;
+}
+.em { font-size:.84rem; color:var(--red); line-height:1.6 }
+
+.cpbtn {
+  padding:6px 12px;
+  background:var(--card2); border:1.5px solid var(--border2);
+  border-radius:7px; color:var(--t1);
+  font-family:'DM Mono',monospace; font-size:.7rem; font-weight:500;
+  cursor:pointer; display:inline-flex; align-items:center; gap:5px;
+  transition:all var(--trans);
+}
+.cpbtn svg { width:12px;height:12px }
+.cpbtn:hover { background:var(--card); border-color:var(--b400); color:var(--b300); transform:translateY(-1px) }
+
+/* ═══════════════════════════════════════════
+   RECORDS TABLE
+═══════════════════════════════════════════ */
+.records-header {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:14px;
+}
+.records-count {
+  font-family:'DM Mono',monospace; font-size:.7rem; color:var(--t2);
+}
+.records-count span { color:var(--b300); font-weight:500 }
+
+.record-filter {
+  display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px;
+}
+.filter-pill {
+  padding:3px 10px; border-radius:6px;
+  border:1px solid var(--border2);
+  background:var(--card2); color:var(--t2);
+  font-family:'DM Mono',monospace; font-size:.65rem; cursor:pointer;
+  transition:all var(--trans);
+}
+.filter-pill:hover { border-color:var(--b400); color:var(--t1) }
+.filter-pill.active { background:var(--b500); border-color:var(--b400); color:#fff }
+
+.record-list { display:flex; flex-direction:column; gap:8px }
+
+.record-item {
+  background:var(--card2); border:1px solid var(--border);
+  border-radius:var(--r); padding:13px 15px;
+  display:flex; flex-direction:column; gap:8px;
+  transition:all var(--trans); position:relative; overflow:hidden;
+}
+.record-item::before {
+  content:''; position:absolute; left:0; top:0; bottom:0; width:3px;
+  background:var(--b400); opacity:0; transition:opacity var(--trans);
+}
+.record-item:hover { border-color:var(--border2); background:var(--card) }
+.record-item:hover::before { opacity:1 }
+
+.record-top {
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+}
+.record-name {
+  font-family:'DM Mono',monospace; font-size:.82rem; color:var(--t0);
+  font-weight:500; word-break:break-all; flex:1; min-width:0;
+}
+.record-type-badge {
+  padding:2px 8px; border-radius:5px;
+  font-family:'DM Mono',monospace; font-size:.62rem; font-weight:500;
+  flex-shrink:0;
+}
+.type-A    { background:rgba(63,99,255,.15); color:var(--b300) }
+.type-AAAA { background:rgba(99,63,255,.15); color:#a78bfa }
+.type-CNAME{ background:rgba(0,212,170,.12); color:var(--acc) }
+.type-TXT  { background:rgba(245,158,11,.12); color:var(--amber) }
+.type-MX   { background:rgba(255,77,106,.12); color:var(--red) }
+.type-NS   { background:rgba(148,163,184,.12); color:var(--t1) }
+
+.proxy-indicator {
+  width:8px; height:8px; border-radius:50%; flex-shrink:0;
+}
+.proxy-on  { background:var(--amber); box-shadow:0 0 6px rgba(245,158,11,.4) }
+.proxy-off { background:var(--t2) }
+
+.record-content {
+  font-family:'DM Mono',monospace; font-size:.75rem; color:var(--t1);
+  word-break:break-all; padding:6px 10px;
+  background:var(--bg2); border-radius:7px;
+  border:1px solid var(--border); line-height:1.5;
+}
+
+.record-meta {
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+}
+.record-meta-item {
+  font-size:.65rem; color:var(--t2);
+  font-family:'DM Mono',monospace; display:flex; align-items:center; gap:4px;
+}
+.record-meta-item svg { width:10px;height:10px }
+
+.record-actions {
+  display:flex; gap:6px; margin-top:4px;
+}
+.action-btn {
+  padding:5px 10px; border-radius:7px;
+  border:1px solid var(--border2); background:var(--card2);
+  color:var(--t1); cursor:pointer;
+  font-family:'DM Mono',monospace; font-size:.67rem; font-weight:500;
+  display:flex; align-items:center; gap:5px;
+  transition:all var(--trans);
+}
+.action-btn svg { width:11px;height:11px }
+.action-btn:hover { background:var(--card); border-color:var(--border2); color:var(--t0) }
+.action-btn.edit:hover   { border-color:var(--b400); color:var(--b300) }
+.action-btn.delete:hover { border-color:var(--red); color:var(--red) }
+
+/* empty state */
+.empty-state {
+  padding:40px 20px; text-align:center;
+  color:var(--t2); font-size:.82rem;
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+}
+.empty-state svg { width:32px;height:32px;opacity:.3 }
+
+/* loading state */
+.skeleton {
+  background:linear-gradient(90deg,var(--card2) 25%,var(--border) 50%,var(--card2) 75%);
+  background-size:200% auto;
+  animation:skeleton-shimmer 1.5s linear infinite;
+  border-radius:var(--r); height:80px;
+}
+@keyframes skeleton-shimmer { to { background-position:-200% center } }
+
+/* ═══════════════════════════════════════════
+   EDIT MODAL
+═══════════════════════════════════════════ */
+.modal-overlay {
+  position:fixed; inset:0; z-index:500;
+  background:rgba(0,0,0,.65); backdrop-filter:blur(4px);
+  display:none; align-items:center; justify-content:center; padding:16px;
+  animation:fade-in .18s ease;
+}
+@keyframes fade-in { from { opacity:0 } to { opacity:1 } }
+.modal-overlay.open { display:flex }
+
+.modal {
+  background:var(--card); border:1px solid var(--border2);
+  border-radius:var(--rxl); padding:28px;
+  width:100%; max-width:480px; max-height:90vh; overflow-y:auto;
+  box-shadow:0 25px 80px rgba(0,0,0,.5);
+  animation:modal-in .22s cubic-bezier(.22,1,.36,1);
+  position:relative;
+}
+@keyframes modal-in {
+  from { opacity:0; transform:translateY(20px) scale(.97) }
+  to   { opacity:1; transform:none }
+}
+.modal-close {
+  position:absolute; top:16px; right:16px;
+  width:30px; height:30px; border-radius:8px;
+  border:1px solid var(--border2); background:var(--card2);
+  color:var(--t1); cursor:pointer; display:flex; align-items:center; justify-content:center;
+  transition:all var(--trans);
+}
+.modal-close:hover { background:var(--card); color:var(--t0) }
+.modal-close svg { width:14px;height:14px }
+
+/* ═══════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════ */
+.toast-container {
+  position:fixed; bottom:28px; right:20px; z-index:999;
+  display:flex; flex-direction:column; gap:8px; align-items:flex-end;
+  pointer-events:none;
+}
+.toast {
+  display:flex; align-items:center; gap:10px;
+  padding:11px 16px; border-radius:12px;
+  border:1px solid;
+  font-size:.82rem; font-weight:500; max-width:320px;
+  box-shadow:0 8px 32px rgba(0,0,0,.3);
+  animation:toast-in .3s cubic-bezier(.22,1,.36,1) both;
+  pointer-events:auto; backdrop-filter:blur(12px);
+  font-family:'Outfit',sans-serif;
+}
+@keyframes toast-in {
+  from { opacity:0; transform:translateX(20px) scale(.95) }
+  to   { opacity:1; transform:none }
+}
+.toast.toast-out {
+  animation:toast-out .25s ease both;
+}
+@keyframes toast-out {
+  to { opacity:0; transform:translateX(20px) scale(.95) }
+}
+.toast.ok  { background:rgba(0,212,170,.12); border-color:rgba(0,212,170,.3); color:var(--acc) }
+.toast.err { background:rgba(255,77,106,.12); border-color:rgba(255,77,106,.3); color:var(--red) }
+.toast.info{ background:rgba(63,99,255,.12);  border-color:rgba(63,99,255,.3);  color:var(--b300) }
+.toast svg { width:15px;height:15px;flex-shrink:0 }
+
+/* ═══════════════════════════════════════════
+   CONFIRM DIALOG
+═══════════════════════════════════════════ */
+.confirm-box {
+  background:var(--card2); border:1.5px solid rgba(255,77,106,.25);
+  border-radius:var(--r); padding:16px 18px; margin-top:10px;
+  display:none; animation:slide-up .22s ease;
+}
+.confirm-box.open { display:block }
+.confirm-msg { font-size:.83rem; color:var(--t1); margin-bottom:12px; line-height:1.55 }
+.confirm-msg strong { color:var(--red); font-weight:600 }
+.confirm-actions { display:flex; gap:8px }
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════ */
+@media(max-width:480px) {
+  .card { padding:20px 16px 18px }
+  .fg-row { grid-template-columns:1fr }
+  .rg { grid-template-columns:1fr }
+  .modal { padding:20px 16px }
+  h1 { font-size:1.9rem }
+}
+
+/* ═══════════════════════════════════════════
+   UTILITY
+═══════════════════════════════════════════ */
+.mt-2 { margin-top:8px }
+.mt-3 { margin-top:14px }
+.hidden { display:none !important }
 </style>
 </head>
 <body>
 
-<div class="blobs" aria-hidden="true">
-  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+<!-- ══ BG ══ -->
+<div class="aurora" aria-hidden="true">
+  <div class="aurora-blob ab1"></div>
+  <div class="aurora-blob ab2"></div>
+  <div class="aurora-blob ab3"></div>
 </div>
-<div class="dotgrid" aria-hidden="true"></div>
+<div class="bg-grid" aria-hidden="true"></div>
 <canvas id="netCanvas" aria-hidden="true"></canvas>
-<canvas id="waveCanvas" aria-hidden="true"></canvas>
 
-<!-- lang -->
-<div class="lang">
-  <button id="btnEN" class="on" onclick="setLang('en')">EN</button>
-  <div class="lsep"></div>
-  <button id="btnID" onclick="setLang('id')">ID</button>
+<!-- ══ TOP BAR ══ -->
+<div class="topbar">
+  <div class="topbar-brand">
+    <div class="brand-dot">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+    </div>
+    CF Subdomain Creator
+  </div>
+  <div class="topbar-right">
+    <div class="lang-sw">
+      <button id="btnEN" class="on" onclick="setLang('en')">EN</button>
+      <div class="lsep"></div>
+      <button id="btnID" onclick="setLang('id')">ID</button>
+    </div>
+    <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle theme">
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun"  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+    </button>
+  </div>
 </div>
 
+<!-- ══ MAIN WRAP ══ -->
 <div class="wrap">
 
-  <!-- ── header ── -->
+  <!-- header -->
   <header class="header" data-aos="fade-down" data-aos-duration="600">
     <div class="pill"><span class="pdot"></span>Cloudflare API v4</div>
     <h1><span class="grad">Subdomain</span> Creator</h1>
-    <p class="sub" id="tSub">Add a DNS A record directly via Cloudflare API.</p>
+    <p class="sub" id="tSub">Manage DNS records directly via Cloudflare API.</p>
   </header>
 
-  <!-- ── chips ── -->
-  <div class="chips" data-aos="fade-up" data-aos-delay="70" data-aos-duration="520">
-    <div class="chip">
-      <!-- zap -->
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-      API v4
+  <!-- chips -->
+  <div class="chips" data-aos="fade-up" data-aos-delay="80" data-aos-duration="500">
+    <div class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>API v4</div>
+    <div class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Bearer Token</div>
+    <div class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>CRUD</div>
+    <div class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>Multi-Type</div>
+  </div>
+
+  <!-- tabs -->
+  <div class="tabs" data-aos="fade-up" data-aos-delay="140" data-aos-duration="500">
+    <button class="tab active" id="tab-create" onclick="switchTab('create')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span id="tTabCreate">Create</span>
+    </button>
+    <button class="tab" id="tab-records" onclick="switchTab('records')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      <span id="tTabRecords">Records</span>
+    </button>
+  </div>
+
+  <!-- ══ TAB: CREATE ══ -->
+  <div class="tab-panel active" id="panel-create">
+    <div class="card" data-aos="fade-up" data-aos-delay="180" data-aos-duration="550">
+
+      <!-- Auth -->
+      <div class="sec" data-aos="fade-right" data-aos-delay="260" data-aos-duration="400">
+        <div class="sico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+        <span class="slbl" id="tSecAuth">Auth</span>
+      </div>
+      <div class="divider"></div>
+      <div class="fg" data-aos="fade-up" data-aos-delay="300" data-aos-duration="400">
+        <div class="fg1">
+          <label class="lbl" for="zoneId">Zone ID</label>
+          <div class="iw">
+            <svg class="iw-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <input type="text" id="zoneId" placeholder="your-zone-id" autocomplete="off" oninput="onZoneInput()"/>
+          </div>
+        </div>
+        <div class="fg1">
+          <label class="lbl" for="apiKey" id="tLblKey">API Token</label>
+          <div class="iw">
+            <svg class="iw-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+            <input type="password" id="apiKey" placeholder="DNS:Edit scope" autocomplete="new-password"/>
+            <button class="pw-toggle" type="button" onclick="togglePw('apiKey','pwEye')" title="Show/hide token">
+              <svg id="pwEye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- DNS Record -->
+      <div class="sec" style="margin-top:20px" data-aos="fade-right" data-aos-delay="340" data-aos-duration="400">
+        <div class="sico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1"/></svg></div>
+        <span class="slbl" id="tSecDns">DNS Record</span>
+      </div>
+      <div class="divider"></div>
+      <div class="fg" data-aos="fade-up" data-aos-delay="380" data-aos-duration="400">
+
+        <!-- Record type pills -->
+        <div class="fg1">
+          <label class="lbl" id="tLblType">Record Type</label>
+          <div class="type-pills">
+            <button class="type-pill active" data-type="A"     onclick="setRecordType('A')">A</button>
+            <button class="type-pill"        data-type="AAAA"  onclick="setRecordType('AAAA')">AAAA</button>
+            <button class="type-pill"        data-type="CNAME" onclick="setRecordType('CNAME')">CNAME</button>
+            <button class="type-pill"        data-type="TXT"   onclick="setRecordType('TXT')">TXT</button>
+          </div>
+        </div>
+
+        <div class="fg1">
+          <label class="lbl" for="subdomainName" id="tLblSub">Subdomain</label>
+          <div class="iw">
+            <svg class="iw-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            <input type="text" id="subdomainName" placeholder="api" autocomplete="off" spellcheck="false"/>
+          </div>
+          <p class="hint" id="tHintSub">Prefix only — domain resolved from Zone ID</p>
+        </div>
+
+        <!-- IP / content field (label changes by type) -->
+        <div class="fg1" id="ipGroup">
+          <label class="lbl" for="ipTarget" id="tLblIp">Target IP</label>
+          <div class="iw" id="ipWrap">
+            <svg class="iw-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>
+            <input type="text" id="ipTarget" placeholder="1.2.3.4" autocomplete="off"/>
+          </div>
+        </div>
+
+        <!-- TXT content (hidden by default) -->
+        <div class="fg1 hidden" id="txtGroup">
+          <label class="lbl" for="txtContent" id="tLblTxt">TXT Content</label>
+          <textarea id="txtContent" placeholder="v=spf1 include:_spf.google.com ~all"></textarea>
+        </div>
+
+        <!-- TTL + proxy row -->
+        <div class="fg-row">
+          <div class="fg1">
+            <label class="lbl" for="ttlSelect" id="tLblTtl">TTL</label>
+            <div class="iw">
+              <svg class="iw-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <select id="ttlSelect">
+                <option value="1">Auto</option>
+                <option value="60">1 min</option>
+                <option value="120" selected>2 min</option>
+                <option value="300">5 min</option>
+                <option value="600">10 min</option>
+                <option value="1800">30 min</option>
+                <option value="3600">1 hr</option>
+                <option value="86400">1 day</option>
+              </select>
+            </div>
+          </div>
+          <div class="fg1" id="proxyGroup">
+            <label class="lbl" id="tLblProxy">Proxy</label>
+            <div class="trow on" id="proxyRow" onclick="toggleProxy()">
+              <span class="tlbl">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+                <span class="proxy-badge" id="proxyBadge">ORANGE</span>
+              </span>
+              <label class="sw" onclick="event.stopPropagation()">
+                <input type="checkbox" id="proxied" checked onchange="syncProxy()"/>
+                <span class="sl"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn" id="btnSubmit" type="button" onclick="submitCreate()" data-aos="zoom-in" data-aos-delay="420" data-aos-duration="400">
+          <div class="sp"></div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
+          <span class="bt" id="tBtn">Create Record</span>
+        </button>
+      </div>
+
+      <p class="snote" data-aos="fade-up" data-aos-delay="460" data-aos-duration="400">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span id="tNote">Token sent to Cloudflare API — never stored on server.</span>
+      </p>
     </div>
-    <div class="chip">
-      <!-- lock -->
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-      Bearer Token
-    </div>
-    <div class="chip">
-      <!-- radio -->
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1"/></svg>
-      Type A
-    </div>
-    <div class="chip">
-      <!-- cloud -->
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
-      Proxy
+
+    <!-- create result -->
+    <div class="result" id="resultBox">
+      <div class="rh"><div class="ri0" id="rIco"></div><span id="rTtl"></span></div>
+      <div id="rBdy"></div>
     </div>
   </div>
 
-  <!-- ── card ── -->
-  <div class="card" data-aos="fade-up" data-aos-delay="120" data-aos-duration="580">
-
-    <!-- auth section -->
-    <div class="sec" data-aos="fade-right" data-aos-delay="190">
-      <div class="sico">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+  <!-- ══ TAB: RECORDS ══ -->
+  <div class="tab-panel" id="panel-records">
+    <div class="card" data-aos="fade-up" data-aos-duration="500">
+      <div class="sec">
+        <div class="sico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div>
+        <span class="slbl" id="tSecRecords">DNS Records</span>
       </div>
-      <span class="slbl" id="tSecAuth">Auth</span>
-    </div>
-    <div class="divider"></div>
+      <div class="divider"></div>
 
-    <div class="fg" data-aos="fade-up" data-aos-delay="220">
-      <div class="fg1">
-        <label class="lbl" for="zoneId">Zone ID</label>
-        <div class="iw">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-          <input type="text" id="zoneId" placeholder="Zone ID" autocomplete="off"/>
+      <!-- inline auth for records tab (mirrors create) -->
+      <div class="fg" style="margin-bottom:14px">
+        <div class="fg-row">
+          <div class="fg1">
+            <label class="lbl">Zone ID</label>
+            <div class="iw">
+              <svg class="iw-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              <input type="text" id="rZoneId" placeholder="zone-id" autocomplete="off"/>
+            </div>
+          </div>
+          <div class="fg1">
+            <label class="lbl" id="tLblKeyR">API Token</label>
+            <div class="iw">
+              <svg class="iw-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+              <input type="password" id="rApiKey" placeholder="DNS:Edit scope" autocomplete="new-password"/>
+              <button class="pw-toggle" type="button" onclick="togglePw('rApiKey','pwEyeR')">
+                <svg id="pwEyeR" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
         </div>
+        <button class="btn btn-secondary" id="btnLoad" type="button" onclick="loadRecords()">
+          <div class="sp"></div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
+          <span class="bt" id="tBtnLoad">Load Records</span>
+        </button>
       </div>
-      <div class="fg1">
-        <label class="lbl" for="apiKey" id="tLblKey">API Token</label>
-        <div class="iw">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
-          <input type="password" id="apiKey" placeholder="DNS:Edit scope" autocomplete="new-password"/>
+
+      <!-- filter + list -->
+      <div id="recordsSection" class="hidden">
+        <div class="records-header">
+          <div class="records-count" id="recordsCount"></div>
         </div>
+        <div class="record-filter" id="typeFilters"></div>
+        <div class="record-list" id="recordList"></div>
+      </div>
+
+      <div class="empty-state" id="recordsEmpty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+        <span id="tEmptyState">Enter credentials and load records.</span>
       </div>
     </div>
-
-    <!-- dns section -->
-    <div class="sec" data-aos="fade-right" data-aos-delay="255">
-      <div class="sico">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1"/></svg>
-      </div>
-      <span class="slbl" id="tSecDns">DNS Record</span>
-    </div>
-    <div class="divider"></div>
-
-    <div class="fg" data-aos="fade-up" data-aos-delay="285">
-      <div class="fg1">
-        <label class="lbl" for="subdomainName" id="tLblSub">Subdomain</label>
-        <div class="iw">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-          <input type="text" id="subdomainName" placeholder="panel" autocomplete="off" spellcheck="false"/>
-        </div>
-        <p class="hint" id="tHintSub">Prefix only — domain resolved from Zone ID</p>
-      </div>
-
-      <div class="fg1">
-        <label class="lbl" for="ipTarget" id="tLblIp">Target IP</label>
-        <div class="iw">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>
-          <input type="text" id="ipTarget" placeholder="1.2.3.4" autocomplete="off"/>
-        </div>
-      </div>
-
-      <!-- proxy toggle: .on = orange, .off = grey -->
-      <div class="trow on" id="proxyRow" data-aos="fade-up" data-aos-delay="305" onclick="toggleProxy()">
-        <span class="tlbl">
-          <!-- cloud icon -->
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
-          <span id="tLblProxy">Proxied</span>
-          <span class="proxy-badge" id="proxyBadge">ORANGE</span>
-        </span>
-        <label class="sw" onclick="event.stopPropagation()">
-          <input type="checkbox" id="proxied" checked onchange="syncProxy()"/>
-          <span class="sl"></span>
-        </label>
-      </div>
-
-      <button class="btn" id="btnSubmit" type="button" data-aos="zoom-in" data-aos-delay="325">
-        <div class="sp"></div>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
-        <span class="bt" id="tBtn">Create Subdomain</span>
-      </button>
-    </div>
-
-    <p class="snote">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-      <span id="tNote">Token sent directly to Cloudflare — never stored.</span>
-    </p>
-  </div>
-
-  <!-- result -->
-  <div class="result" id="resultBox">
-    <div class="rh"><div class="ri0" id="rIco"></div><span id="rTtl"></span></div>
-    <div id="rBdy"></div>
   </div>
 
 </div><!-- /wrap -->
 
+<!-- ══ EDIT MODAL ══ -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="sec" style="margin-bottom:14px">
+      <div class="sico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+      <span class="slbl" id="tModalTitle">Edit Record</span>
+    </div>
+    <div class="divider"></div>
+    <div class="fg">
+      <div class="fg1">
+        <label class="lbl" id="tEditName">Name</label>
+        <div class="iw">
+          <svg class="iw-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          <input type="text" id="editName" autocomplete="off"/>
+        </div>
+      </div>
+      <div class="fg1">
+        <label class="lbl" id="tEditContent">Content</label>
+        <div class="iw" id="editContentWrap">
+          <svg class="iw-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>
+          <input type="text" id="editContent" autocomplete="off"/>
+        </div>
+        <textarea id="editContentTxt" class="hidden" style="margin-top:0;padding-left:13px"></textarea>
+      </div>
+      <div class="fg-row">
+        <div class="fg1">
+          <label class="lbl">TTL</label>
+          <div class="iw">
+            <svg class="iw-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <select id="editTtl">
+              <option value="1">Auto</option>
+              <option value="60">1 min</option>
+              <option value="120">2 min</option>
+              <option value="300">5 min</option>
+              <option value="600">10 min</option>
+              <option value="1800">30 min</option>
+              <option value="3600">1 hr</option>
+              <option value="86400">1 day</option>
+            </select>
+          </div>
+        </div>
+        <div class="fg1" id="editProxyGroup">
+          <label class="lbl">Proxy</label>
+          <div class="trow on" id="editProxyRow" onclick="toggleEditProxy()">
+            <span class="tlbl">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+              <span class="proxy-badge" id="editProxyBadge">ORANGE</span>
+            </span>
+            <label class="sw" onclick="event.stopPropagation()">
+              <input type="checkbox" id="editProxied" checked onchange="syncEditProxy()"/>
+              <span class="sl"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+      <button class="btn" id="btnSaveEdit" type="button" onclick="saveEdit()">
+        <div class="sp"></div>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        <span class="bt" id="tBtnSave">Save Changes</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TOAST CONTAINER ══ -->
+<div class="toast-container" id="toastContainer"></div>
+
 <script>
-AOS.init({ once: true, easing: 'ease-out-quart', offset: 10 });
+// ═══════════════════════════════════════════
+//  AOS INIT
+// ═══════════════════════════════════════════
+AOS.init({ once: true, easing: 'ease-out-quart', offset: 8, duration: 500 });
 
-/* ── network canvas ── */
-(function () {
-  const cv = document.getElementById('netCanvas');
-  const cx = cv.getContext('2d');
-  let W, H, nd;
-  const N = 32, DIST = 125;
-  function resize() { W = cv.width = innerWidth; H = cv.height = innerHeight; }
-  function init() {
-    nd = Array.from({ length: N }, () => ({
-      x: Math.random() * W, y: Math.random() * H,
-      vx: (Math.random() - .5) * .28, vy: (Math.random() - .5) * .28,
-      r: Math.random() * 1.7 + 1,
-    }));
-  }
-  function frame() {
-    cx.clearRect(0, 0, W, H);
-    for (let i = 0; i < nd.length; i++) {
-      for (let j = i + 1; j < nd.length; j++) {
-        const dx = nd[i].x - nd[j].x, dy = nd[i].y - nd[j].y;
-        const d = Math.sqrt(dx * dx + dy * dy);
-        if (d < DIST) {
-          cx.beginPath();
-          cx.moveTo(nd[i].x, nd[i].y);
-          cx.lineTo(nd[j].x, nd[j].y);
-          cx.strokeStyle = `rgba(96,165,250,${.14 * (1 - d / DIST)})`;
-          cx.lineWidth = .65; cx.stroke();
-        }
-      }
-    }
-    nd.forEach(n => {
-      cx.beginPath(); cx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
-      cx.fillStyle = 'rgba(96,165,250,.38)'; cx.fill();
-      n.x += n.vx; n.y += n.vy;
-      if (n.x < 0 || n.x > W) n.vx *= -1;
-      if (n.y < 0 || n.y > H) n.vy *= -1;
-    });
-    requestAnimationFrame(frame);
-  }
-  resize(); init(); frame();
-  window.addEventListener('resize', () => { resize(); init(); });
-})();
-
-/* ── wave canvas ── */
-(function () {
-  const cv = document.getElementById('waveCanvas');
-  const cx = cv.getContext('2d');
-  let W, t = 0;
-  const WS = [
-    { a: 22, f: .015, s: .85, c: 'rgba(147,197,253,.2)',  o: 0   },
-    { a: 14, f: .022, s: 1.2, c: 'rgba(96,165,250,.13)',  o: 1.5 },
-    { a: 9,  f: .03,  s: .6,  c: 'rgba(59,130,246,.08)',  o: 3.0 },
-  ];
-  function resize() { W = cv.width = innerWidth; cv.height = cv.offsetHeight; }
-  function frame() {
-    const H = cv.height; cx.clearRect(0, 0, W, H); t += .007;
-    WS.forEach(w => {
-      cx.beginPath(); cx.moveTo(0, H);
-      for (let x = 0; x <= W; x += 4)
-        cx.lineTo(x, H * .47 + Math.sin(x * w.f + t * w.s + w.o) * w.a);
-      cx.lineTo(W, H); cx.closePath();
-      cx.fillStyle = w.c; cx.fill();
-    });
-    requestAnimationFrame(frame);
-  }
-  resize(); frame();
-  window.addEventListener('resize', resize);
-})();
-
-/* ── i18n ── */
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
 let lang = 'en';
+let currentType = 'A';
+let recordsCache = [];
+let editRecordId = '';
+let activeFilter = 'ALL';
+
+// ═══════════════════════════════════════════
+//  i18n
+// ═══════════════════════════════════════════
 const TX = {
   en: {
-    tSub:      'Add a DNS A record directly via Cloudflare API.',
-    tSecAuth:  'Auth',
-    tSecDns:   'DNS Record',
-    tLblKey:   'API Token',
-    tLblSub:   'Subdomain',
-    tLblIp:    'Target IP',
-    tLblProxy: 'Proxied',
-    tBtn:      'Create Subdomain',
-    tHintSub:  'Prefix only — domain resolved from Zone ID',
-    tNote:     'Token sent directly to Cloudflare — never stored.',
-    eZone: 'Zone ID is required', eKey: 'API Token is required',
-    eSd: 'Subdomain is required', eSdFmt: 'Subdomain: letters, numbers, hyphens only',
-    eIp: 'Target IP is required', eIpFmt: 'Invalid IPv4 address',
-    valFail: 'Validation Failed', cfErr: 'Cloudflare Error', netErr: 'Request Failed',
-    netHint: 'Check that api.cloudflare.com is not blocked',
-    ok: 'Subdomain created', copied: '✓ Copied', cpyBtn: 'Copy JSON',
+    tSub:'Manage DNS records directly via Cloudflare API.',
+    tSecAuth:'Auth', tSecDns:'DNS Record', tSecRecords:'DNS Records',
+    tLblKey:'API Token', tLblSub:'Subdomain', tLblIp:'Target IP',
+    tLblTxt:'TXT Content', tLblType:'Record Type', tLblTtl:'TTL',
+    tLblProxy:'Proxy',
+    tBtn:'Create Record', tBtnLoad:'Load Records',
+    tTabCreate:'Create', tTabRecords:'Records',
+    tHintSub:'Prefix only — domain resolved from Zone ID',
+    tNote:'Token sent to Cloudflare API — never stored on server.',
+    tEmptyState:'Enter credentials and load records.',
+    tModalTitle:'Edit Record', tEditName:'Name', tEditContent:'Content',
+    tBtnSave:'Save Changes', tLblKeyR:'API Token',
+    eZone:'Zone ID is required', eKey:'API Token is required',
+    eSd:'Subdomain is required', eSdFmt:'Letters, numbers, hyphens only',
+    eIp:'Target IP is required', eIpFmt:'Invalid IPv4 address',
+    eIpv6:'Invalid IPv6 address', eCname:'Invalid hostname',
+    eTxt:'TXT content is required',
+    valFail:'Validation Failed', cfErr:'Cloudflare Error',
+    netErr:'Request Failed', ok:'Record created!',
+    updateOk:'Record updated!', deleteOk:'Record deleted!',
+    copied:'Copied!', cpyBtn:'Copy JSON',
+    confirm:'Confirm delete', confirmMsg:'Delete record',
+    confirmYes:'Delete', confirmNo:'Cancel',
+    filter:'Filter:',
   },
   id: {
-    tSub:      'Tambah DNS record A langsung via Cloudflare API.',
-    tSecAuth:  'Autentikasi',
-    tSecDns:   'DNS Record',
-    tLblKey:   'API Token',
-    tLblSub:   'Subdomain',
-    tLblIp:    'IP Target',
-    tLblProxy: 'Proxied',
-    tBtn:      'Buat Subdomain',
-    tHintSub:  'Isi prefix saja — domain dari Zone ID',
-    tNote:     'Token dikirim langsung ke Cloudflare — tidak disimpan.',
-    eZone: 'Zone ID wajib diisi', eKey: 'API Token wajib diisi',
-    eSd: 'Subdomain wajib diisi', eSdFmt: 'Subdomain: huruf, angka, tanda hubung saja',
-    eIp: 'IP target wajib diisi', eIpFmt: 'Format IPv4 tidak valid',
-    valFail: 'Validasi Gagal', cfErr: 'Error Cloudflare', netErr: 'Request Gagal',
-    netHint: 'Pastikan api.cloudflare.com tidak diblokir',
-    ok: 'Subdomain berhasil dibuat', copied: '✓ Tersalin', cpyBtn: 'Copy JSON',
+    tSub:'Kelola DNS record langsung via Cloudflare API.',
+    tSecAuth:'Autentikasi', tSecDns:'DNS Record', tSecRecords:'DNS Records',
+    tLblKey:'API Token', tLblSub:'Subdomain', tLblIp:'IP Target',
+    tLblTxt:'Konten TXT', tLblType:'Tipe Record', tLblTtl:'TTL',
+    tLblProxy:'Proxy',
+    tBtn:'Buat Record', tBtnLoad:'Muat Records',
+    tTabCreate:'Buat', tTabRecords:'Records',
+    tHintSub:'Isi prefix saja — domain dari Zone ID',
+    tNote:'Token dikirim ke Cloudflare API — tidak disimpan di server.',
+    tEmptyState:'Masukkan kredensial lalu muat records.',
+    tModalTitle:'Edit Record', tEditName:'Nama', tEditContent:'Konten',
+    tBtnSave:'Simpan', tLblKeyR:'API Token',
+    eZone:'Zone ID wajib diisi', eKey:'API Token wajib diisi',
+    eSd:'Subdomain wajib diisi', eSdFmt:'Huruf, angka, tanda hubung saja',
+    eIp:'IP target wajib diisi', eIpFmt:'Format IPv4 tidak valid',
+    eIpv6:'Format IPv6 tidak valid', eCname:'Hostname tidak valid',
+    eTxt:'Konten TXT wajib diisi',
+    valFail:'Validasi Gagal', cfErr:'Error Cloudflare',
+    netErr:'Request Gagal', ok:'Record berhasil dibuat!',
+    updateOk:'Record berhasil diupdate!', deleteOk:'Record berhasil dihapus!',
+    copied:'Tersalin!', cpyBtn:'Copy JSON',
+    confirm:'Konfirmasi hapus', confirmMsg:'Hapus record',
+    confirmYes:'Hapus', confirmNo:'Batal',
+    filter:'Filter:',
   },
 };
-
-const TIDS = ['tSub','tSecAuth','tSecDns','tLblKey','tLblSub','tLblIp','tLblProxy','tBtn','tHintSub','tNote'];
-function setLang(l) {
-  lang = l;
-  document.getElementById('btnEN').classList.toggle('on', l === 'en');
-  document.getElementById('btnID').classList.toggle('on', l === 'id');
-  TIDS.forEach(id => { const el = document.getElementById(id); if (el) el.textContent = TX[l][id]; });
+const TIDS=['tSub','tSecAuth','tSecDns','tSecRecords','tLblKey','tLblSub','tLblIp',
+  'tLblTxt','tLblType','tLblTtl','tLblProxy','tBtn','tBtnLoad','tTabCreate','tTabRecords',
+  'tHintSub','tNote','tEmptyState','tModalTitle','tEditName','tEditContent','tBtnSave','tLblKeyR'];
+function setLang(l){
+  lang=l;
+  document.getElementById('btnEN').classList.toggle('on',l==='en');
+  document.getElementById('btnID').classList.toggle('on',l==='id');
+  TIDS.forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=TX[l][id];});
 }
-function t(k) { return TX[lang][k] || TX.en[k]; }
+const t=k=>TX[lang][k]||TX.en[k];
 
-/* ── proxy toggle ── */
-const proxyRow   = document.getElementById('proxyRow');
-const proxiedEl  = document.getElementById('proxied');
-const proxyBadge = document.getElementById('proxyBadge');
+// ═══════════════════════════════════════════
+//  THEME
+// ═══════════════════════════════════════════
+function toggleTheme(){
+  const html=document.documentElement;
+  const next=html.getAttribute('data-theme')==='dark'?'light':'dark';
+  html.setAttribute('data-theme',next);
+  localStorage.setItem('cf_theme',next);
+}
+(()=>{const saved=localStorage.getItem('cf_theme');if(saved)document.documentElement.setAttribute('data-theme',saved);})();
 
-function syncProxy() {
-  const on = proxiedEl.checked;
-  proxyRow.classList.toggle('on',  on);
-  proxyRow.classList.toggle('off', !on);
-  proxyBadge.textContent = on ? 'ORANGE' : 'OFF';
+// ═══════════════════════════════════════════
+//  LOCAL STORAGE
+// ═══════════════════════════════════════════
+const LS_ZONE='cf_zone', LS_TOKEN='cf_token';
+window.addEventListener('DOMContentLoaded',()=>{
+  const z=localStorage.getItem(LS_ZONE)||'';
+  const tk=localStorage.getItem(LS_TOKEN)||'';
+  document.getElementById('zoneId').value=z;
+  document.getElementById('apiKey').value=tk;
+  document.getElementById('rZoneId').value=z;
+  document.getElementById('rApiKey').value=tk;
+});
+function saveCredentials(){
+  const z=document.getElementById('zoneId').value.trim();
+  const tk=document.getElementById('apiKey').value.trim();
+  if(z) localStorage.setItem(LS_ZONE,z);
+  if(tk) localStorage.setItem(LS_TOKEN,tk);
 }
-function toggleProxy() {
-  proxiedEl.checked = !proxiedEl.checked;
-  syncProxy();
+function onZoneInput(){
+  // sync zone across tabs
+  document.getElementById('rZoneId').value=document.getElementById('zoneId').value;
 }
+
+// ═══════════════════════════════════════════
+//  TABS
+// ═══════════════════════════════════════════
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(el=>el.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  document.getElementById('panel-'+name).classList.add('active');
+  if(name==='records'){
+    // sync credentials
+    document.getElementById('rZoneId').value=document.getElementById('zoneId').value;
+    document.getElementById('rApiKey').value=document.getElementById('apiKey').value;
+  }
+}
+
+// ═══════════════════════════════════════════
+//  RECORD TYPE
+// ═══════════════════════════════════════════
+function setRecordType(type){
+  currentType=type;
+  document.querySelectorAll('.type-pill').forEach(el=>{
+    el.classList.toggle('active',el.dataset.type===type);
+  });
+  const ipLbl=document.getElementById('tLblIp');
+  const ipGroup=document.getElementById('ipGroup');
+  const txtGroup=document.getElementById('txtGroup');
+  const proxyGroup=document.getElementById('proxyGroup');
+  const ipIn=document.getElementById('ipTarget');
+
+  txtGroup.classList.add('hidden');
+  ipGroup.classList.remove('hidden');
+  proxyGroup.classList.remove('hidden');
+
+  if(type==='A'){ipLbl.textContent='Target IP';ipIn.placeholder='1.2.3.4';}
+  else if(type==='AAAA'){ipLbl.textContent='IPv6 Address';ipIn.placeholder='2606:4700::1';}
+  else if(type==='CNAME'){
+    ipLbl.textContent='Target Hostname';
+    ipIn.placeholder='example.com';
+    proxyGroup.classList.add('hidden');
+  }
+  else if(type==='TXT'){
+    ipGroup.classList.add('hidden');
+    txtGroup.classList.remove('hidden');
+    proxyGroup.classList.add('hidden');
+  }
+}
+
+// ═══════════════════════════════════════════
+//  PASSWORD TOGGLE
+// ═══════════════════════════════════════════
+const EYE_OPEN=`<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
+const EYE_OFF=`<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>`;
+function togglePw(inputId,eyeId){
+  const inp=document.getElementById(inputId);
+  const eye=document.getElementById(eyeId);
+  if(!inp||!eye) return;
+  const isHidden=inp.type==='password';
+  inp.type=isHidden?'text':'password';
+  eye.innerHTML=isHidden?EYE_OFF:EYE_OPEN;
+}
+
+// ═══════════════════════════════════════════
+//  PROXY TOGGLE
+// ═══════════════════════════════════════════
+function syncProxy(){
+  const on=document.getElementById('proxied').checked;
+  const row=document.getElementById('proxyRow');
+  row.classList.toggle('on',on);row.classList.toggle('off',!on);
+  document.getElementById('proxyBadge').textContent=on?'ORANGE':'OFF';
+}
+function toggleProxy(){document.getElementById('proxied').checked=!document.getElementById('proxied').checked;syncProxy();}
 syncProxy();
 
-/* ── refs ── */
-const $ = id => document.getElementById(id);
-const zEl  = $('zoneId'), tkEl = $('apiKey');
-const sdEl = $('subdomainName'), ipEl = $('ipTarget');
-const btn  = $('btnSubmit');
-const rBox = $('resultBox'), rIco = $('rIco'), rTtl = $('rTtl'), rBdy = $('rBdy');
-
-const LS = { z: 'cf_z' };
-zEl.value = localStorage.getItem(LS.z) || '';
-
-/* ── helpers ── */
-function validIP(ip) {
-  const p = ip.split('.');
-  return p.length === 4 && p.every(x => x !== '' && !isNaN(+x) && +x >= 0 && +x <= 255 && String(+x) === x);
+function syncEditProxy(){
+  const on=document.getElementById('editProxied').checked;
+  const row=document.getElementById('editProxyRow');
+  row.classList.toggle('on',on);row.classList.toggle('off',!on);
+  document.getElementById('editProxyBadge').textContent=on?'ORANGE':'OFF';
 }
-const esc  = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-const escQ = s => String(s).replace(/'/g,'&#39;');
+function toggleEditProxy(){document.getElementById('editProxied').checked=!document.getElementById('editProxied').checked;syncEditProxy();}
 
-function setLoad(on) { btn.disabled = on; btn.classList.toggle('loading', on); }
+// ═══════════════════════════════════════════
+//  VALIDATION
+// ═══════════════════════════════════════════
+function validIPv4(ip){const p=ip.split('.');return p.length===4&&p.every(x=>x!==''&&!isNaN(+x)&&+x>=0&&+x<=255&&String(+x)===x);}
+function validIPv6(ip){return/^([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$/.test(ip)||(ip.includes('.')&&/^[0-9a-fA-F:]+:[0-9a-fA-F:]*\d+\.\d+\.\d+\.\d+$/.test(ip));}
+function validHostname(h){return/^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/.test(h)||/^[a-zA-Z0-9\-]+$/.test(h);}
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const escQ=s=>String(s).replace(/'/g,'&#39;');
 
-const SVG_OK  = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><polyline points="20 6 9 17 4 12"/></svg>`;
-const SVG_ERR = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
-const SVG_CP  = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
-
-function showResult(type, ico, title, body) {
-  rBox.className = `result ${type}`;
-  rBox.style.display = 'block';
-  rIco.innerHTML   = ico;
-  rTtl.textContent = title;
-  rBdy.innerHTML   = body;
-  rBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+// ═══════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════
+const ICONS={
+  ok:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+  err:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+  info:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`,
+};
+function toast(type,msg,dur=3500){
+  const c=document.getElementById('toastContainer');
+  const el=document.createElement('div');
+  el.className=`toast ${type}`;
+  el.innerHTML=`${ICONS[type]||ICONS.info}<span>${esc(msg)}</span>`;
+  c.appendChild(el);
+  setTimeout(()=>{el.classList.add('toast-out');setTimeout(()=>el.remove(),280);},dur);
 }
 
-window.copyJSON = id => {
-  const raw = document.getElementById(id)?.dataset.json || '';
-  navigator.clipboard.writeText(raw).then(() => {
-    const b = document.querySelector('.cpbtn');
-    if (b) {
-      b.textContent = t('copied');
-      setTimeout(() => { b.innerHTML = SVG_CP + t('cpyBtn'); }, 1500);
-    }
+// ═══════════════════════════════════════════
+//  RESULT BOX (CREATE TAB)
+// ═══════════════════════════════════════════
+const SVG_OK=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><polyline points="20 6 9 17 4 12"/></svg>`;
+const SVG_ERR=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+const SVG_CP=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+
+function showResult(type,ico,title,body){
+  const b=document.getElementById('resultBox');
+  b.className=`result ${type}`;b.style.display='block';
+  document.getElementById('rIco').innerHTML=ico;
+  document.getElementById('rTtl').textContent=title;
+  document.getElementById('rBdy').innerHTML=body;
+  b.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+window.copyJSON=id=>{
+  const raw=document.getElementById(id)?.dataset.json||'';
+  navigator.clipboard.writeText(raw).then(()=>{
+    toast('ok',t('copied'));
+    const b=document.querySelector('.cpbtn');
+    if(b){b.textContent=t('copied');setTimeout(()=>{b.innerHTML=SVG_CP+t('cpyBtn');},1500);}
   });
 };
+window.copyText=text=>{navigator.clipboard.writeText(text).then(()=>toast('ok',t('copied')));};
 
-/* ── submit ── */
-btn.addEventListener('click', async () => {
-  const zone = zEl.value.trim();
-  const tk   = tkEl.value.trim();
-  const sd   = sdEl.value.trim();
-  const ip   = ipEl.value.trim();
-  const prx  = proxiedEl.checked;
+// ═══════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════
+function setLoad(btnId,on){
+  const b=document.getElementById(btnId);
+  b.disabled=on;b.classList.toggle('loading',on);
+}
+function getCredsCreate(){
+  return{zone:document.getElementById('zoneId').value.trim(),token:document.getElementById('apiKey').value.trim()};
+}
+function getCredsRecords(){
+  return{zone:document.getElementById('rZoneId').value.trim(),token:document.getElementById('rApiKey').value.trim()};
+}
+async function cfFetch(path,method,token,body){
+  const opts={method,headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'}};
+  if(body) opts.body=JSON.stringify(body);
+  const r=await fetch(`/api/proxy.js?action=${path}&method=${method}`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({_path:path,_method:method,_token:token,...(body||{})})
+  });
+  return r.json();
+}
 
-  const errs = [];
-  if (!zone) errs.push(t('eZone'));
-  if (!tk)   errs.push(t('eKey'));
-  if (!sd)   errs.push(t('eSd'));
-  else if (!/^[a-zA-Z0-9*]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?$/.test(sd) && sd !== '*')
-             errs.push(t('eSdFmt'));
-  if (!ip)   errs.push(t('eIp'));
-  else if (!validIP(ip)) errs.push(t('eIpFmt'));
+// ═══════════════════════════════════════════
+//  CREATE RECORD
+// ═══════════════════════════════════════════
+async function submitCreate(){
+  const {zone,token}=getCredsCreate();
+  const sd=document.getElementById('subdomainName').value.trim();
+  const ip=document.getElementById('ipTarget').value.trim();
+  const txt=document.getElementById('txtContent').value.trim();
+  const prx=document.getElementById('proxied').checked;
+  const ttl=parseInt(document.getElementById('ttlSelect').value);
+  const type=currentType;
 
-  if (errs.length) {
-    showResult('err', SVG_ERR, t('valFail'),
-      errs.map(e => `<p class="em">· ${esc(e)}</p>`).join(''));
+  const errs=[];
+  if(!zone) errs.push(t('eZone'));
+  if(!token) errs.push(t('eKey'));
+  if(!sd) errs.push(t('eSd'));
+  else if(!/^[a-zA-Z0-9*]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?$/.test(sd)&&sd!=='*') errs.push(t('eSdFmt'));
+  if(type==='A'){if(!ip)errs.push(t('eIp'));else if(!validIPv4(ip))errs.push(t('eIpFmt'));}
+  else if(type==='AAAA'){if(!ip)errs.push(t('eIp'));else if(!validIPv6(ip))errs.push(t('eIpv6'));}
+  else if(type==='CNAME'){if(!ip)errs.push(t('eIp'));else if(!validHostname(ip))errs.push(t('eCname'));}
+  else if(type==='TXT'){if(!txt)errs.push(t('eTxt'));}
+
+  if(errs.length){
+    showResult('err',SVG_ERR,t('valFail'),errs.map(e=>`<p class="em">· ${esc(e)}</p>`).join(''));
     return;
   }
 
-  localStorage.setItem(LS.z, zone);
-  setLoad(true);
-  rBox.style.display = 'none';
+  saveCredentials();
+  setLoad('btnSubmit',true);
+  document.getElementById('resultBox').style.display='none';
 
-  try {
-  const formData = new FormData();
+  try{
+    const content=type==='TXT'?txt:ip;
+    const body={zone,token,subdomain:sd,ip:content,proxied:(type==='A'||type==='AAAA')?prx:false,ttl,type};
+    const res=await fetch('/api/proxy.js',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(body)
+    });
+    const data=await res.json();
+    const json=JSON.stringify(data,null,2);
 
-  formData.append('zone', zone);
-  formData.append('token', tk);
-  formData.append('subdomain', sd);
-  formData.append('ip', ip);
-  formData.append('proxied', prx);
+    if(data.success){
+      const r=data.result;
+      toast('ok',t('ok'));
+      showResult('ok',SVG_OK,t('ok'),
+        `<div class="rg">
+          <div class="ri"><label>Name</label><span>${esc(r.name)}</span></div>
+          <div class="ri"><label>Type</label><span>${esc(r.type)}</span></div>
+          <div class="ri"><label>Content</label><span>${esc(r.content)}</span></div>
+          <div class="ri"><label>TTL</label><span>${r.ttl===1?'Auto':r.ttl+'s'}</span></div>
+          <div class="ri"><label>Proxied</label><span>${r.proxied?'✅ Yes':'❌ No'}</span></div>
+          <div class="ri"><label>Record ID</label><span style="font-size:.7rem;opacity:.6">${esc(r.id)}</span></div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <span id="jh" data-json='${escQ(json)}'></span>
+          <button class="cpbtn" onclick="copyJSON('jh')">${SVG_CP}${t('cpyBtn')}</button>
+          <button class="cpbtn" onclick="copyText('${escQ(r.name)}')">${SVG_CP}Copy Name</button>
+        </div>`
+      );
+    }else{
+      const em=data.errors?.[0]?.message||data.error||'Unknown error';
+      const ec=data.errors?.[0]?.code?` (${data.errors[0].code})`:'';
+      toast('err',em);
+      showResult('err',SVG_ERR,t('cfErr'),
+        `<p class="em">${esc(em)}${ec}</p>
+         <span id="jh" data-json='${escQ(json)}'></span>
+         <button class="cpbtn" style="margin-top:10px" onclick="copyJSON('jh')">${SVG_CP}${t('cpyBtn')}</button>`
+      );
+    }
+  }catch(e){
+    toast('err',e.message);
+    showResult('err',SVG_ERR,t('netErr'),`<p class="em">${esc(e.message)}</p>`);
+  }finally{
+    setLoad('btnSubmit',false);
+  }
+}
 
-  const res = await fetch('/api/proxy.js', {
-    method: 'POST',
-    body: formData
-  });
+// ═══════════════════════════════════════════
+//  LOAD RECORDS
+// ═══════════════════════════════════════════
+async function loadRecords(){
+  const {zone,token}=getCredsRecords();
+  if(!zone||!token){toast('err',t('eZone')+' / '+t('eKey'));return;}
 
-  const data = await res.json();
-  const json = JSON.stringify(data, null, 2);
+  // sync to create tab
+  document.getElementById('zoneId').value=zone;
+  document.getElementById('apiKey').value=token;
+  localStorage.setItem(LS_ZONE,zone);
+  localStorage.setItem(LS_TOKEN,token);
 
-  if (data.success) {
-    const r = data.result;
+  setLoad('btnLoad',true);
+  document.getElementById('recordsSection').classList.add('hidden');
+  document.getElementById('recordsEmpty').classList.remove('hidden');
+  document.getElementById('recordsEmpty').querySelector('span').textContent='Loading...';
 
-    showResult('ok', SVG_OK, t('ok'),
-      `<div class="rg">
-        <div class="ri"><label>Subdomain</label><span>${esc(r.name)}</span></div>
-        <div class="ri"><label>Type</label><span>${esc(r.type)}</span></div>
-        <div class="ri"><label>IP</label><span>${esc(r.content)}</span></div>
-        <div class="ri"><label>Proxied</label><span>${r.proxied ? '✅ Yes' : '❌ No'}</span></div>
-        <div class="ri"><label>TTL</label><span>${r.ttl === 1 ? 'Auto' : r.ttl + 's'}</span></div>
-        <div class="ri"><label>Record ID</label><span style="font-size:.7rem;opacity:.55">${esc(r.id)}</span></div>
-      </div>
-      <span id="jh" data-json='${escQ(json)}'></span>
-      <button class="cpbtn" onclick="copyJSON('jh')">${SVG_CP}${t('cpyBtn')}</button>`
-    );
+  try{
+    const res=await fetch('/api/proxy.js',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({zone,token,_action:'list'})
+    });
+    const data=await res.json();
 
-  } else {
+    if(data.success){
+      recordsCache=data.result||[];
+      activeFilter='ALL';
+      renderRecords();
+      document.getElementById('recordsEmpty').classList.add('hidden');
+      document.getElementById('recordsSection').classList.remove('hidden');
+      toast('info',`Loaded ${recordsCache.length} records`);
+    }else{
+      const em=data.errors?.[0]?.message||'Error';
+      toast('err',em);
+      document.getElementById('recordsEmpty').querySelector('span').textContent=em;
+    }
+  }catch(e){
+    toast('err',e.message);
+    document.getElementById('recordsEmpty').querySelector('span').textContent=e.message;
+  }finally{
+    setLoad('btnLoad',false);
+  }
+}
 
-    const em = data.errors?.[0]?.message || data.error || 'Unknown error';
-    const ec = data.errors?.[0]?.code ? ` (${data.errors[0].code})` : '';
+function renderRecords(){
+  const types=[...new Set(recordsCache.map(r=>r.type))].sort();
+  const filtered=activeFilter==='ALL'?recordsCache:recordsCache.filter(r=>r.type===activeFilter);
 
-    showResult('err', SVG_ERR, t('cfErr'),
-      `<p class="em">${esc(em)}${ec}</p>
-       <span id="jh" data-json='${escQ(json)}'></span>
-       <button class="cpbtn" style="margin-top:10px" onclick="copyJSON('jh')">${SVG_CP}${t('cpyBtn')}</button>`
-    );
+  // filters
+  const fEl=document.getElementById('typeFilters');
+  fEl.innerHTML=`<span style="font-size:.65rem;color:var(--t2);align-self:center;font-family:'DM Mono',monospace">${t('filter')}</span>`
+    +['ALL',...types].map(tp=>`<button class="filter-pill ${activeFilter===tp?'active':''}" onclick="setFilter('${tp}')">${tp==='ALL'?'All':tp}</button>`).join('');
+
+  // count
+  document.getElementById('recordsCount').innerHTML=`<span>${filtered.length}</span> record${filtered.length!==1?'s':''}${activeFilter!=='ALL'?` (${activeFilter})`:''}`;
+
+  // list
+  const list=document.getElementById('recordList');
+  if(!filtered.length){
+    list.innerHTML=`<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg><span>No ${activeFilter} records found.</span></div>`;
+    return;
   }
 
-} catch (e) {
-
-  showResult('err', SVG_ERR, t('netErr'),
-    `<p class="em">${esc(e.message)}</p>`
-  );
-
-} finally {
-  setLoad(false);
+  const ttlLabel=v=>v===1?'Auto':(v<60?v+'s':v<3600?(v/60)+'m':(v/3600)+'h');
+  list.innerHTML=filtered.map(r=>`
+    <div class="record-item" id="rec-${r.id}">
+      <div class="record-top">
+        <span class="record-name">${esc(r.name)}</span>
+        <span class="record-type-badge type-${r.type}">${esc(r.type)}</span>
+        ${(r.type==='A'||r.type==='AAAA')?`<span class="proxy-indicator ${r.proxied?'proxy-on':'proxy-off'}" title="${r.proxied?'Proxied':'DNS only'}"></span>`:''}
+      </div>
+      <div class="record-content">${esc(r.content)}</div>
+      <div class="record-meta">
+        <span class="record-meta-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          TTL: ${ttlLabel(r.ttl)}
+        </span>
+        <span class="record-meta-item" style="cursor:pointer" onclick="copyText('${escQ(r.id)}')" title="Copy ID">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          ${esc(r.id.slice(0,8))}…
+        </span>
+      </div>
+      <div class="record-actions">
+        <button class="action-btn edit" onclick="openEdit('${escQ(r.id)}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Edit
+        </button>
+        <button class="action-btn delete" onclick="confirmDelete('${escQ(r.id)}','${escQ(r.name)}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          Delete
+        </button>
+      </div>
+      <div class="confirm-box" id="confirm-${r.id}">
+        <p class="confirm-msg">${t('confirmMsg')} <strong>${esc(r.name)}</strong>?</p>
+        <div class="confirm-actions">
+          <button class="btn btn-danger btn-sm" onclick="deleteRecord('${escQ(r.id)}')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            <span>${t('confirmYes')}</span>
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="cancelDelete('${escQ(r.id)}')">${t('confirmNo')}</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
 }
-});
+
+function setFilter(f){activeFilter=f;renderRecords();}
+
+// ═══════════════════════════════════════════
+//  DELETE
+// ═══════════════════════════════════════════
+function confirmDelete(id,name){
+  document.querySelectorAll('.confirm-box').forEach(el=>el.classList.remove('open'));
+  const box=document.getElementById(`confirm-${id}`);
+  if(box)box.classList.add('open');
+}
+function cancelDelete(id){
+  const box=document.getElementById(`confirm-${id}`);
+  if(box)box.classList.remove('open');
+}
+
+async function deleteRecord(id){
+  const {zone,token}=getCredsRecords();
+  try{
+    const res=await fetch('/api/proxy.js',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({zone,token,recordId:id,_action:'delete'})
+    });
+    const data=await res.json();
+    if(data.success){
+      recordsCache=recordsCache.filter(r=>r.id!==id);
+      renderRecords();
+      toast('ok',t('deleteOk'));
+    }else{
+      const em=data.errors?.[0]?.message||'Delete failed';
+      toast('err',em);
+    }
+  }catch(e){toast('err',e.message);}
+}
+
+// ═══════════════════════════════════════════
+//  EDIT MODAL
+// ═══════════════════════════════════════════
+function openEdit(id){
+  const rec=recordsCache.find(r=>r.id===id);
+  if(!rec)return;
+  editRecordId=id;
+
+  document.getElementById('editName').value=rec.name;
+  const isTxt=rec.type==='TXT';
+  const contentWrap=document.getElementById('editContentWrap');
+  const contentTxt=document.getElementById('editContentTxt');
+  const contentIn=document.getElementById('editContent');
+  if(isTxt){
+    contentWrap.classList.add('hidden');contentTxt.classList.remove('hidden');
+    contentTxt.value=rec.content;
+  }else{
+    contentWrap.classList.remove('hidden');contentTxt.classList.add('hidden');
+    contentIn.value=rec.content;
+  }
+  // ttl
+  const ttlSel=document.getElementById('editTtl');
+  const opts=[1,60,120,300,600,1800,3600,86400];
+  const closest=opts.reduce((a,b)=>Math.abs(b-rec.ttl)<Math.abs(a-rec.ttl)?b:a);
+  ttlSel.value=closest;
+
+  // proxy
+  const proxyG=document.getElementById('editProxyGroup');
+  if(rec.type==='A'||rec.type==='AAAA'){
+    proxyG.classList.remove('hidden');
+    document.getElementById('editProxied').checked=rec.proxied;
+    syncEditProxy();
+  }else{proxyG.classList.add('hidden');}
+
+  document.getElementById('editModal').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('editModal').classList.remove('open');
+  editRecordId='';
+}
+document.getElementById('editModal').addEventListener('click',e=>{if(e.target===document.getElementById('editModal'))closeModal();});
+
+async function saveEdit(){
+  const {zone,token}=getCredsRecords();
+  if(!editRecordId)return;
+  const rec=recordsCache.find(r=>r.id===editRecordId);
+  if(!rec)return;
+
+  const name=document.getElementById('editName').value.trim();
+  const isTxt=rec.type==='TXT';
+  const content=isTxt?document.getElementById('editContentTxt').value.trim():document.getElementById('editContent').value.trim();
+  const ttl=parseInt(document.getElementById('editTtl').value);
+  const proxied=document.getElementById('editProxied').checked;
+
+  setLoad('btnSaveEdit',true);
+  try{
+    const res=await fetch('/api/proxy.js',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({zone,token,recordId:editRecordId,name,content,ttl,proxied,type:rec.type,_action:'update'})
+    });
+    const data=await res.json();
+    if(data.success){
+      const idx=recordsCache.findIndex(r=>r.id===editRecordId);
+      if(idx>=0)recordsCache[idx]={...recordsCache[idx],...data.result};
+      renderRecords();
+      closeModal();
+      toast('ok',t('updateOk'));
+    }else{
+      const em=data.errors?.[0]?.message||'Update failed';
+      toast('err',em);
+    }
+  }catch(e){toast('err',e.message);}
+  finally{setLoad('btnSaveEdit',false);}
+}
+
+// ═══════════════════════════════════════════
+//  NETWORK CANVAS
+// ═══════════════════════════════════════════
+(()=>{
+  const cv=document.getElementById('netCanvas');
+  const cx=cv.getContext('2d');
+  let W,H,nd;
+  const N=28,DIST=120;
+  function resize(){W=cv.width=innerWidth;H=cv.height=innerHeight;}
+  function init(){
+    nd=Array.from({length:N},()=>({
+      x:Math.random()*W,y:Math.random()*H,
+      vx:(Math.random()-.5)*.22,vy:(Math.random()-.5)*.22,
+      r:Math.random()*1.5+.8,
+    }));
+  }
+  function frame(){
+    cx.clearRect(0,0,W,H);
+    const isDark=document.documentElement.getAttribute('data-theme')==='dark';
+    const lineColor=isDark?'rgba(99,135,255,':'rgba(37,99,235,';
+    const dotColor=isDark?'rgba(99,135,255,.25)':'rgba(37,99,235,.2)';
+    for(let i=0;i<nd.length;i++){
+      for(let j=i+1;j<nd.length;j++){
+        const dx=nd[i].x-nd[j].x,dy=nd[i].y-nd[j].y;
+        const d=Math.sqrt(dx*dx+dy*dy);
+        if(d<DIST){
+          cx.beginPath();cx.moveTo(nd[i].x,nd[i].y);cx.lineTo(nd[j].x,nd[j].y);
+          cx.strokeStyle=lineColor+(.1*(1-d/DIST))+')';
+          cx.lineWidth=.5;cx.stroke();
+        }
+      }
+    }
+    nd.forEach(n=>{
+      cx.beginPath();cx.arc(n.x,n.y,n.r,0,Math.PI*2);
+      cx.fillStyle=dotColor;cx.fill();
+      n.x+=n.vx;n.y+=n.vy;
+      if(n.x<0||n.x>W)n.vx*=-1;
+      if(n.y<0||n.y>H)n.vy*=-1;
+    });
+    requestAnimationFrame(frame);
+  }
+  resize();init();frame();
+  window.addEventListener('resize',()=>{resize();init();});
+})();
 </script>
 </body>
 </html>
