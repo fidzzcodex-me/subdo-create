@@ -1,368 +1,131 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cloudflare Subdomain Creator</title>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css" />
-  <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
-
-  <style>
-    :root {
-      --bg:      #edf3fc;
-      --surface: #ffffff;
-      --s2:      #f5f9ff;
-      --b100:    #dbeafe;
-      --b200:    #bfdbfe;
-      --b300:    #93c5fd;
-      --b400:    #60a5fa;
-      --b500:    #3b82f6;
-      --b600:    #2563eb;
-      --t900:    #0f172a;
-      --t700:    #334155;
-      --t500:    #64748b;
-      --t400:    #94a3b8;
-      --border:  #e1eaf8;
-      --r:       10px;
-      --rlg:     16px;
-      --shadow:  0 6px 28px rgba(37,99,235,.09), 0 1px 4px rgba(37,99,235,.05);
-      --sbtn:    0 4px 14px rgba(37,99,235,.28);
-    }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
-
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background: var(--bg);
-      color: var(--t900);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 0 16px 80px;
-      overflow-x: hidden;
-    }
-
-    /* ── Background layers ── */
-    .blobs {
-      position: fixed; inset: 0;
-      z-index: 0; pointer-events: none; overflow: hidden;
-    }
-    .blob {
-      position: absolute; border-radius: 50%;
-      filter: blur(90px); opacity: .42;
-      animation: drift 22s ease-in-out infinite alternate;
-    }
-    .b1 { width:480px;height:480px; background:radial-gradient(#bfdbfe,#93c5fd80); top:-80px;left:-60px; }
-    .b2 { width:360px;height:360px; background:radial-gradient(#dbeafe,#c7d2fe55); top:38%;right:-70px; animation-delay:-9s; animation-duration:18s; }
-    .b3 { width:280px;height:280px; background:radial-gradient(#e0f2fe,#bae6fd40); bottom:8%;left:18%; animation-delay:-14s; animation-duration:26s; }
-    @keyframes drift {
-      0%   { transform:translate(0,0) scale(1); }
-      50%  { transform:translate(20px,-14px) scale(1.03); }
-      100% { transform:translate(-12px,18px) scale(.98); }
-    }
-
-    .dotgrid {
-      position: fixed; inset: 0; z-index: 0; pointer-events: none;
-      background-image: radial-gradient(circle, #93c5fd30 1px, transparent 1px);
-      background-size: 26px 26px;
-      mask-image: radial-gradient(ellipse 65% 65% at 50% 40%, black, transparent);
-    }
-
-    canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
-    #waveCanvas { top: auto; bottom: 0; height: 42%; width: 100%; opacity: .4; }
-
-    /* ── Layout ── */
-    .wrap {
-      position: relative; z-index: 1;
-      width: 100%; max-width: 540px;
-      display: flex; flex-direction: column; align-items: center;
-      padding-top: 56px;
-    }
-
-    /* ── Lang toggle ── */
-    .lang-toggle {
-      position: fixed; top: 20px; right: 20px;
-      z-index: 100;
-      display: flex; align-items: center;
-      border: 1.5px solid var(--border);
-      border-radius: 8px;
-      overflow: hidden;
-      background: var(--surface);
-      box-shadow: 0 2px 8px rgba(37,99,235,.08);
-      font-size: .72rem; font-weight: 600;
-      font-family: 'DM Sans', sans-serif;
-    }
-    .lang-btn {
-      padding: 5px 10px;
-      cursor: pointer; border: none; background: none;
-      color: var(--t500);
-      font-size: .72rem; font-weight: 600;
-      font-family: 'DM Sans', sans-serif;
-      transition: background .15s, color .15s;
-      line-height: 1;
-    }
-    .lang-btn.active {
-      background: var(--b500); color: #fff;
-    }
-    .lang-sep {
-      width: 1px; height: 20px;
-      background: var(--border); flex-shrink: 0;
-    }
-
-    /* ── Header ── */
-    .header { text-align: center; margin-bottom: 36px; width: 100%; }
-
-    .pill {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: #fff; border: 1px solid var(--b200);
-      border-radius: 100px; padding: 4px 12px 4px 8px;
-      font-size: .68rem; font-weight: 600; color: var(--b600);
-      letter-spacing: .5px; text-transform: uppercase; margin-bottom: 14px;
-      box-shadow: 0 1px 6px rgba(37,99,235,.07);
-    }
-    .pill-dot {
-      width: 6px; height: 6px; background: var(--b500); border-radius: 50%;
-      animation: pulse 2.2s ease-in-out infinite;
-    }
-    @keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.6);opacity:.45} }
-
-    h1 {
-      font-family: 'Syne', sans-serif;
-      font-size: clamp(1.75rem, 4.5vw, 2.4rem);
-      font-weight: 800; line-height: 1.18; letter-spacing: -.8px;
-      color: var(--t900);
-    }
-    h1 .grad {
-      background: linear-gradient(125deg, var(--b600), var(--b400));
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .sub {
-      margin-top: 8px; font-size: .85rem;
-      color: var(--t500); line-height: 1.6;
-    }
-
-    /* ── Info chips ── */
-    .chips {
-      display: flex; gap: 8px; margin-bottom: 22px;
-      flex-wrap: wrap; justify-content: center;
-    }
-    .chip {
-      display: flex; align-items: center; gap: 6px;
-      background: #fff; border: 1px solid var(--border);
-      border-radius: 8px; padding: 7px 12px;
-      font-size: .75rem; font-weight: 500; color: var(--t700);
-      box-shadow: 0 1px 4px rgba(37,99,235,.05);
-    }
-    .chip-icon { font-size: .85rem; opacity: .7; }
-
-    /* ── Card ── */
-    .card {
-      width: 100%; background: var(--surface);
-      border: 1px solid var(--border); border-radius: var(--rlg);
-      padding: 28px 28px 24px;
-      box-shadow: var(--shadow);
-      position: relative; overflow: hidden;
-    }
-    .card::before {
-      content: ''; position: absolute;
-      top: 0; left: 0; right: 0; height: 2.5px;
-      background: linear-gradient(90deg, var(--b300), var(--b600), var(--b300));
-      background-size: 200% auto;
-      animation: bar 3.5s linear infinite;
-    }
-    @keyframes bar { to { background-position: 200% center; } }
-
-    /* ── Section ── */
-    .sec {
-      display: flex; align-items: center; gap: 8px;
-      margin-bottom: 12px;
-    }
-    .sec + .fg { margin-bottom: 20px; }
-    .sec-ico {
-      width: 26px; height: 26px; border-radius: 7px;
-      background: var(--s2); border: 1px solid var(--b100);
-      display: flex; align-items: center; justify-content: center;
-      font-size: .8rem;
-    }
-    .sec-lbl {
-      font-family: 'Syne', sans-serif;
-      font-size: .68rem; font-weight: 700;
-      color: var(--b600); letter-spacing: .7px; text-transform: uppercase;
-    }
-    .divider { height: 1px; background: linear-gradient(90deg, var(--border), transparent); margin-bottom: 16px; }
-
-    /* ── Form ── */
-    .fg { display: grid; gap: 13px; }
-    .fg.two { grid-template-columns: 1fr 1fr; }
-
-    .fgroup { display: flex; flex-direction: column; gap: 5px; }
-
-    label.lbl {
-      font-size: .68rem; font-weight: 600;
-      color: var(--t500); letter-spacing: .4px; text-transform: uppercase;
-    }
-
-    .iw { position: relative; }
-    .iico {
-      position: absolute; left: 10px; top: 50%;
-      transform: translateY(-50%);
-      font-size: .85rem; opacity: .32; pointer-events: none;
-      transition: opacity .2s;
-    }
-    .iw:focus-within .iico { opacity: .6; }
-
-    input[type=text], input[type=password] {
-      width: 100%; padding: 9px 12px 9px 34px;
-      background: var(--s2);
-      border: 1.5px solid var(--border); border-radius: var(--r);
-      color: var(--t900); font-family: 'DM Sans', sans-serif;
-      font-size: .86rem; font-weight: 400; outline: none;
-      transition: border-color .18s, box-shadow .18s, background .18s;
-    }
-    input::placeholder { color: var(--t400); font-weight: 300; }
-    input:focus {
-      border-color: var(--b500);
-      box-shadow: 0 0 0 3px rgba(59,130,246,.11);
-      background: #fff;
-    }
-
-    .hint { font-size: .67rem; color: var(--t400); margin-top: -5px; }
-
-    /* ── Toggle ── */
-    .toggle-row {
-      display: flex; align-items: center; justify-content: space-between;
-      background: var(--s2); border: 1.5px solid var(--border); border-radius: var(--r);
-      padding: 11px 13px; cursor: pointer;
-      transition: background .18s, border-color .18s;
-    }
-    .toggle-row:hover { background: var(--b100); border-color: var(--b300); }
-    .tlbl {
-      display: flex; align-items: center; gap: 7px;
-      font-size: .86rem; font-weight: 500; color: var(--t900);
-    }
-    .cf-badge {
-      background: #f97316; color: #fff;
-      font-size: .58rem; font-weight: 700;
-      padding: 2px 5px; border-radius: 4px; letter-spacing: .3px;
-    }
-    .sw { position: relative; width: 38px; height: 21px; flex-shrink: 0; }
-    .sw input { opacity: 0; width: 0; height: 0; }
-    .sl {
-      position: absolute; inset: 0;
-      background: #cbd5e1; border-radius: 21px; cursor: pointer;
-      transition: background .25s;
-    }
-    .sl::before {
-      content: ''; position: absolute;
-      width: 15px; height: 15px; left: 3px; bottom: 3px;
-      background: #fff; border-radius: 50%;
-      box-shadow: 0 1px 3px rgba(0,0,0,.12);
-      transition: transform .25s cubic-bezier(.34,1.56,.64,1);
-    }
-    .sw input:checked + .sl { background: var(--b500); }
-    .sw input:checked + .sl::before { transform: translateX(17px); }
-
-    /* ── Button ── */
-    .btn {
-      width: 100%; padding: 12px;
-      background: linear-gradient(130deg, var(--b600), var(--b400));
-      border: none; border-radius: var(--r);
-      color: #fff; font-family: 'Syne', sans-serif;
-      font-size: .88rem; font-weight: 700; letter-spacing: .2px;
-      cursor: pointer; margin-top: 4px;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      position: relative; overflow: hidden;
-      transition: transform .18s, box-shadow .18s;
-    }
-    .btn::after {
-      content: ''; position: absolute; inset: 0;
-      background: linear-gradient(90deg, transparent 30%, rgba(255,255,255,.13) 50%, transparent 70%);
-      background-size: 200% auto; opacity: 0;
-      animation: shim 2.8s linear infinite;
-      transition: opacity .25s;
-    }
-    @keyframes shim { to { background-position: 200% center; } }
-    .btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: var(--sbtn); }
-    .btn:hover::after { opacity: 1; }
-    .btn:active:not(:disabled) { transform: none; box-shadow: none; }
-    .btn:disabled { opacity: .6; cursor: not-allowed; }
-
-    .spinner {
-      display: none; width: 16px; height: 16px;
-      border: 2px solid rgba(255,255,255,.3);
-      border-top-color: #fff; border-radius: 50%;
-      animation: spin .6s linear infinite;
-    }
-    .btn.loading .spinner { display: block; }
-    .btn.loading .btext { opacity: .7; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .secnote {
-      margin-top: 12px; text-align: center;
-      font-size: .67rem; color: var(--t400);
-      display: flex; align-items: center; justify-content: center; gap: 4px;
-    }
-
-    /* ── Result ── */
-    .result {
-      width: 100%; border-radius: var(--r);
-      border: 1.5px solid; padding: 20px 24px;
-      margin-top: 16px; display: none;
-      animation: slideup .35s cubic-bezier(.22,1,.36,1) both;
-    }
-    @keyframes slideup { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:none} }
-    .result.ok  { background: #f0fdf4; border-color: #86efac; }
-    .result.err { background: #fef2f2; border-color: #fca5a5; }
-
-    .res-head {
-      display: flex; align-items: center; gap: 7px;
-      font-family: 'Syne', sans-serif; font-size: .8rem; font-weight: 700; margin-bottom: 13px;
-    }
-    .result.ok  .res-head { color: #16a34a; }
-    .result.err .res-head { color: #dc2626; }
-
-    .res-ico {
-      width: 22px; height: 22px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: .75rem; flex-shrink: 0;
-    }
-    .result.ok  .res-ico { background: #dcfce7; }
-    .result.err .res-ico { background: #fee2e2; }
-
-    .rgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 20px; margin-bottom: 14px; }
-    .ri label { font-size: .65rem; font-weight: 600; color: var(--t400); text-transform: uppercase; letter-spacing: .4px; display: block; margin-bottom: 1px; }
-    .ri span  { font-size: .85rem; font-weight: 500; word-break: break-all; }
-
-    .errmsg { font-size: .85rem; color: #dc2626; line-height: 1.6; }
-
-    .copybtn {
-      padding: 6px 14px; background: #fff;
-      border: 1.5px solid var(--border); border-radius: 7px;
-      color: var(--t700); font-family: 'DM Sans', sans-serif;
-      font-size: .76rem; font-weight: 600; cursor: pointer;
-      transition: background .15s, border-color .15s, transform .13s;
-    }
-    .copybtn:hover { background: var(--s2); border-color: var(--b300); color: var(--b600); transform: translateY(-1px); }
-
-    @media(max-width:460px){
-      .card { padding: 22px 16px 18px; }
-      .fg.two { grid-template-columns: 1fr; }
-      .rgrid  { grid-template-columns: 1fr; }
-      .chips  { gap: 6px; }
-      .lang-toggle { top:14px; right:14px; }
-    }
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CF Subdomain Creator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css"/>
+<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+<style>
+:root {
+  --bg: #eef4fd;
+  --card: #ffffff;
+  --s2: #f4f9ff;
+  --b100: #dbeafe;
+  --b200: #bfdbfe;
+  --b300: #93c5fd;
+  --b400: #60a5fa;
+  --b500: #3b82f6;
+  --b600: #2563eb;
+  --t900: #0f172a;
+  --t600: #475569;
+  --t400: #94a3b8;
+  --bd: #e1eaf8;
+  --r: 10px;
+  --rlg: 16px;
+  --sh: 0 6px 28px rgba(37,99,235,.09), 0 1px 4px rgba(37,99,235,.05);
+  --shb: 0 4px 14px rgba(37,99,235,.28);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--t900);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 16px 80px;
+  overflow-x: hidden;
+}
+.blobs { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.blob { position: absolute; border-radius: 50%; filter: blur(90px); opacity:.4; animation: drift 22s ease-in-out infinite alternate; }
+.b1 { width: 480px; height: 480px; background: radial-gradient(#bfdbfe, #93c5fd88); top: -80px; left: -60px; }
+.b2 { width: 360px; height: 360px; background: radial-gradient(#dbeafe, #c7d2fe55); top: 38%; right: -70px; animation-delay: -9s; animation-duration: 18s; }
+.b3 { width: 280px; height: 280px; background: radial-gradient(#e0f2fe, #bae6fd44); bottom: 8%; left: 18%; animation-delay: -15s; animation-duration: 26s; }
+@keyframes drift { 0% { transform: translate(0,0) scale(1); } 50% { transform: translate(18px,-12px) scale(1.03); } 100% { transform: translate(-10px,16px) scale(.97); } }
+.dotgrid { position: fixed; inset: 0; z-index: 0; pointer-events: none; background-image: radial-gradient(circle, #93c5fd2c 1px, transparent 1px); background-size: 27px 27px; mask-image: radial-gradient(ellipse 65% 65% at 50% 40%, black, transparent); }
+canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+#waveCanvas { top: auto; bottom: 0; height: 42%; width: 100%; opacity:.38; }
+.lang { position: fixed; top: 18px; right: 18px; z-index: 100; display: inline-flex; align-items: center; border: 1.5px solid var(--bd); border-radius: 8px; overflow: hidden; background: var(--card); box-shadow: 0 2px 8px rgba(37,99,235,.08); }
+.lang button { padding: 5px 11px; border: none; background: none; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size:.71rem; font-weight: 600; color: var(--t400); transition: background.15s, color.15s; line-height: 1.4; }
+.lang button.on { background: var(--b500); color: #fff; }
+.lsep { width: 1px; height: 18px; background: var(--bd); flex-shrink: 0; }
+.wrap { position: relative; z-index: 1; width: 100%; max-width: 520px; display: flex; flex-direction: column; align-items: center; padding-top: 54px; }
+.header { text-align: center; margin-bottom: 28px; width: 100%; }
+.pill { display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1px solid var(--b200); border-radius: 100px; padding: 4px 12px 4px 8px; font-size:.67rem; font-weight: 600; color: var(--b600); letter-spacing:.5px; text-transform: uppercase; margin-bottom: 13px; box-shadow: 0 1px 6px rgba(37,99,235,.07); }
+.pdot { width: 6px; height: 6px; background: var(--b500); border-radius: 50%; animation: pulse 2.2s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.6);opacity:.4} }
+h1 { font-family: 'Syne', sans-serif; font-size: clamp(1.7rem, 4.5vw, 2.3rem); font-weight: 800; line-height: 1.2; letter-spacing: -.7px; color: var(--t900); }
+.grad { background: linear-gradient(125deg, var(--b600), var(--b400)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.sub { margin-top: 7px; font-size:.84rem; color: var(--t600); line-height: 1.55; }
+.chips { display: flex; gap: 7px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
+.chip { display: flex; align-items: center; gap: 5px; background: #fff; border: 1px solid var(--bd); border-radius: 8px; padding: 6px 11px; font-size:.73rem; font-weight: 500; color: var(--t600); box-shadow: 0 1px 3px rgba(37,99,235,.04); }
+.card { width: 100%; background: var(--card); border: 1px solid var(--bd); border-radius: var(--rlg); padding: 26px 26px 22px; box-shadow: var(--sh); position: relative; overflow: hidden; }
+.card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2.5px; background: linear-gradient(90deg, var(--b300), var(--b600), var(--b300)); background-size: 200% auto; animation: bar 3.5s linear infinite; }
+@keyframes bar { to { background-position: 200% center; } }
+.sec { display: flex; align-items: center; gap: 8px; margin-bottom: 11px; }
+.sec +.fg { margin-bottom: 18px; }
+.sico { width: 25px; height: 25px; border-radius: 6px; background: var(--s2); border: 1px solid var(--b100); display: flex; align-items: center; justify-content: center; font-size:.78rem; }
+.slbl { font-family: 'Syne', sans-serif; font-size:.67rem; font-weight: 700; color: var(--b600); letter-spacing:.7px; text-transform: uppercase; }
+.div { height: 1px; background: linear-gradient(90deg, var(--bd), transparent); margin-bottom: 15px; }
+.fg { display: flex; flex-direction: column; gap: 12px; }
+.fg1 { display: flex; flex-direction: column; gap: 5px; }
+.fg +.sec { margin-top: 18px; }
+label.lbl { font-size:.67rem; font-weight: 600; color: var(--t600); letter-spacing:.38px; text-transform: uppercase; }
+.iw { position: relative; }
+.ico { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size:.82rem; opacity:.3; pointer-events: none; transition: opacity.18s; }
+.iw:focus-within.ico { opacity:.58; }
+input[type=text], input[type=password] { width: 100%; padding: 9px 12px 9px 33px; background: var(--s2); border: 1.5px solid var(--bd); border-radius: var(--r); color: var(--t900); font-family: 'DM Sans', sans-serif; font-size:.86rem; font-weight: 400; outline: none; transition: border-color.18s, box-shadow.18s, background.18s; }
+input::placeholder { color: var(--t400); font-weight: 300; }
+input:focus { border-color: var(--b500); box-shadow: 0 0 0 3px rgba(59,130,246,.11); background: #fff; }
+.hint { font-size:.66rem; color: var(--t400); margin-top: -4px; }
+.trow { display: flex; align-items: center; justify-content: space-between; background: var(--s2); border: 1.5px solid var(--bd); border-radius: var(--r); padding: 10px 13px; cursor: pointer; transition: background.18s, border-color.18s; }
+.trow:hover { background: var(--b100); border-color: var(--b300); }
+.tlbl { display: flex; align-items: center; gap: 7px; font-size:.86rem; font-weight: 500; color: var(--t900); }
+.cfb { background: #f97316; color: #fff; font-size:.57rem; font-weight: 700; padding: 2px 5px; border-radius: 4px; }
+.sw { position: relative; width: 38px; height: 21px; flex-shrink: 0; }
+.sw input { opacity: 0; width: 0; height: 0; }
+.sl { position: absolute; inset: 0; background: #cbd5e1; border-radius: 21px; cursor: pointer; transition: background.24s; }
+.sl::before { content: ''; position: absolute; width: 15px; height: 15px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,.12); transition: transform.24s cubic-bezier(.34,1.56,.64,1); }
+.sw input:checked +.sl { background: var(--b500); }
+.sw input:checked +.sl::before { transform: translateX(17px); }
+.btn { width: 100%; padding: 12px; background: linear-gradient(130deg, var(--b600), var(--b400)); border: none; border-radius: var(--r); color: #fff; font-family: 'Syne', sans-serif; font-size:.88rem; font-weight: 700; cursor: pointer; margin-top: 4px; display: flex; align-items: center; justify-content: center; gap: 8px; position: relative; overflow: hidden; transition: transform.18s, box-shadow.18s; }
+.btn::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent 30%, rgba(255,255,255,.13) 50%, transparent 70%); background-size: 200% auto; opacity: 0; animation: shim 2.8s linear infinite; transition: opacity.24s; }
+@keyframes shim { to { background-position: 200% center; } }
+.btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: var(--shb); }
+.btn:hover::after { opacity: 1; }
+.btn:active:not(:disabled) { transform: none; box-shadow: none; }
+.btn:disabled { opacity:.6; cursor: not-allowed; }
+.sp { display: none; width: 15px; height: 15px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin.6s linear infinite; }
+.btn.loading.sp { display: block; }
+.btn.loading.bt { opacity:.7; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.snote { margin-top: 11px; text-align: center; font-size:.65rem; color: var(--t400); display: flex; align-items: center; justify-content: center; gap: 4px; }
+.result { width: 100%; border-radius: var(--r); border: 1.5px solid; padding: 18px 22px; margin-top: 14px; display: none; animation: up.34s cubic-bezier(.22,1,.36,1) both; }
+@keyframes up { from{opacity:0;transform:translateY(11px)} to{opacity:1;transform:none} }
+.result.ok { background: #f0fdf4; border-color: #86efac; }
+.result.err { background: #fef2f2; border-color: #fca5a5; }
+.rh { display: flex; align-items: center; gap: 7px; font-family: 'Syne', sans-serif; font-size:.79rem; font-weight: 700; margin-bottom: 12px; }
+.result.ok.rh { color: #16a34a; }
+.result.err.rh { color: #dc2626; }
+.ri0 { width: 21px; height: 21px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size:.72rem; flex-shrink: 0; }
+.result.ok.ri0 { background: #dcfce7; }
+.result.err.ri0 { background: #fee2e2; }
+.rg { display: grid; grid-template-columns: 1fr 1fr; gap: 9px 16px; margin-bottom: 13px; }
+.ri label { font-size:.63rem; font-weight: 600; color: var(--t400); text-transform: uppercase; letter-spacing:.38px; display: block; margin-bottom: 1px; }
+.ri span { font-size:.84rem; font-weight: 500; word-break: break-all; }
+.em { font-size:.84rem; color: #dc2626; line-height: 1.6; }
+.cpbtn { padding: 6px 13px; background: #fff; border: 1.5px solid var(--bd); border-radius: 7px; color: var(--t600); font-family: 'DM Sans', sans-serif; font-size:.75rem; font-weight: 600; cursor: pointer; transition: background.14s, border-color.14s, transform.12s; }
+.cpbtn:hover { background: var(--s2); border-color: var(--b300); color: var(--b600); transform: translateY(-1px); }
+@media(max-width:450px){.card { padding: 20px 14px 17px; }.rg { grid-template-columns: 1fr; }.lang { top: 12px; right: 12px; } }
+</style>
 </head>
 <body>
-
-<!-- BG -->
 <div class="blobs" aria-hidden="true">
   <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
 </div>
@@ -370,408 +133,366 @@
 <canvas id="netCanvas" aria-hidden="true"></canvas>
 <canvas id="waveCanvas" aria-hidden="true"></canvas>
 
-<!-- Language toggle -->
-<div class="lang-toggle" id="langToggle">
-  <button class="lang-btn active" id="btnEN" onclick="setLang('en')">EN</button>
-  <div class="lang-sep"></div>
-  <button class="lang-btn" id="btnID" onclick="setLang('id')">ID</button>
+<div class="lang">
+  <button id="btnEN" class="on" onclick="setLang('en')">EN</button>
+  <div class="lsep"></div>
+  <button id="btnID" onclick="setLang('id')">ID</button>
 </div>
 
 <div class="wrap">
-
-  <!-- Header -->
-  <header class="header" data-aos="fade-down" data-aos-duration="600">
-    <div class="pill"><span class="pill-dot"></span>Cloudflare API v4</div>
-    <h1><span class="grad" data-en="Subdomain" data-id="Subdomain">Subdomain</span><br><span data-en="Creator" data-id="Creator">Creator</span></h1>
-    <p class="sub" data-en="Create DNS A records directly via Cloudflare API — no server in between." data-id="Buat DNS record A langsung via Cloudflare API — tanpa server perantara.">
-      Create DNS A records directly via Cloudflare API — no server in between.
-    </p>
+  <header class="header" data-aos="fade-down" data-aos-duration="580">
+    <div class="pill"><span class="pdot"></span>Cloudflare API v4</div>
+    <h1><span class="grad">Subdomain</span> Creator</h1>
+    <p class="sub" id="tSub">Add a DNS A record directly via Cloudflare API.</p>
   </header>
 
-  <!-- Info chips -->
-  <div class="chips" data-aos="fade-up" data-aos-delay="80" data-aos-duration="550">
-    <div class="chip"><span class="chip-icon">⚡</span> API v4</div>
-    <div class="chip"><span class="chip-icon">🔒</span> Bearer Token</div>
-    <div class="chip"><span class="chip-icon">📡</span> Type A Record</div>
-    <div class="chip"><span class="chip-icon">☁️</span> Cloudflare Proxy</div>
+  <div class="chips" data-aos="fade-up" data-aos-delay="70" data-aos-duration="520">
+    <div class="chip">⚡ API v4</div>
+    <div class="chip">🔒 Bearer Token</div>
+    <div class="chip">📡 Type A</div>
+    <div class="chip">☁️ Proxy</div>
   </div>
 
-  <!-- Card -->
-  <div class="card" data-aos="fade-up" data-aos-delay="130" data-aos-duration="600">
-
-    <!-- Section: Credentials -->
-    <div class="sec" data-aos="fade-right" data-aos-delay="200">
-      <div class="sec-ico">🔑</div>
-      <span class="sec-lbl" data-en="Credentials" data-id="Kredensial">Credentials</span>
+  <div class="card" data-aos="fade-up" data-aos-delay="120" data-aos-duration="580">
+    <div class="sec" data-aos="fade-right" data-aos-delay="190">
+      <div class="sico">🔑</div>
+      <span class="slbl" id="tSecAuth">Auth</span>
     </div>
-    <div class="divider"></div>
+    <div class="div"></div>
 
-    <div class="fg two" data-aos="fade-up" data-aos-delay="230">
-      <div class="fgroup">
-        <label class="lbl" for="zoneId" data-en="Zone ID" data-id="Zone ID">Zone ID</label>
+    <div class="fg" data-aos="fade-up" data-aos-delay="220">
+      <div class="fg1">
+        <label class="lbl" for="zoneId">Zone ID</label>
         <div class="iw">
-          <span class="iico">🌐</span>
-          <input type="text" id="zoneId" data-ph-en="Zone ID" data-ph-id="Zone ID" placeholder="Zone ID" autocomplete="off" />
+          <span class="ico">🌐</span>
+          <input type="text" id="zoneId" placeholder="Zone ID" autocomplete="off"/>
         </div>
       </div>
-      <div class="fgroup">
-        <label class="lbl" for="accountId" data-en="Account ID" data-id="Account ID">Account ID</label>
+      <div class="fg1">
+        <label class="lbl" for="apiKey" id="tLblKey">API Token</label>
         <div class="iw">
-          <span class="iico">👤</span>
-          <input type="text" id="accountId" data-ph-en="Account ID" data-ph-id="Account ID" placeholder="Account ID" autocomplete="off" />
+          <span class="ico">🔒</span>
+          <input type="password" id="apiKey" placeholder="API Token — DNS:Edit scope" autocomplete="new-password"/>
         </div>
       </div>
     </div>
 
-    <!-- Section: DNS Record -->
-    <div class="sec" style="margin-top:20px" data-aos="fade-right" data-aos-delay="270">
-      <div class="sec-ico">📡</div>
-      <span class="sec-lbl" data-en="DNS Record" data-id="DNS Record">DNS Record</span>
+    <div class="sec" data-aos="fade-right" data-aos-delay="260">
+      <div class="sico">📡</div>
+      <span class="slbl" id="tSecDns">DNS Record</span>
     </div>
-    <div class="divider"></div>
+    <div class="div"></div>
 
-    <div class="fg" data-aos="fade-up" data-aos-delay="300">
-
-      <div class="fgroup">
-        <label class="lbl" for="subdomainName" data-en="Subdomain Name" data-id="Nama Subdomain">Subdomain Name</label>
+    <div class="fg" data-aos="fade-up" data-aos-delay="290">
+      <div class="fg1">
+        <label class="lbl" for="subdomainName" id="tLblSub">Subdomain</label>
         <div class="iw">
-          <span class="iico">◈</span>
-          <input type="text" id="subdomainName"
-            data-ph-en="panel" data-ph-id="panel"
-            placeholder="panel" autocomplete="off" spellcheck="false" />
+          <span class="ico">◈</span>
+          <input type="text" id="subdomainName" placeholder="test" autocomplete="off" spellcheck="false"/>
         </div>
-        <p class="hint" data-en="Prefix only — domain is resolved automatically from Zone ID" data-id="Isi prefix saja — domain otomatis dari Zone ID">
-          Prefix only — domain is resolved automatically from Zone ID
-        </p>
+        <p class="hint" id="tHintSub">Ketik prefix saja. Domain otomatis dari Zone ID</p>
       </div>
-
-      <div class="fgroup">
-        <label class="lbl" for="ipTarget" data-en="Target IP" data-id="IP Target">Target IP</label>
+      <div class="fg1">
+        <label class="lbl" for="ipTarget" id="tLblIp">Target IP</label>
         <div class="iw">
-          <span class="iico">🖥</span>
-          <input type="text" id="ipTarget"
-            data-ph-en="1.2.3.4" data-ph-id="1.2.3.4"
-            placeholder="1.2.3.4" autocomplete="off" />
+          <span class="ico">🖥</span>
+          <input type="text" id="ipTarget" placeholder="1.2.3.4" autocomplete="off"/>
         </div>
       </div>
 
-      <label class="toggle-row" data-aos="fade-up" data-aos-delay="320">
-        <span class="tlbl">
-          ☁️ <span data-en="Proxied" data-id="Proxied">Proxied</span>
-          <span class="cf-badge">ORANGE</span>
-        </span>
+      <label class="trow" data-aos="fade-up" data-aos-delay="310">
+        <span class="tlbl">☁️ <span id="tLblProxy">Proxied</span> <span class="cfb">ORANGE</span></span>
         <label class="sw" onclick="event.stopPropagation()">
-          <input type="checkbox" id="proxied" checked />
+          <input type="checkbox" id="proxied" checked/>
           <span class="sl"></span>
         </label>
       </label>
 
-      <button class="btn" id="btnSubmit" type="button" data-aos="zoom-in" data-aos-delay="350">
-        <div class="spinner"></div>
-        <span class="btext" data-en="Create Subdomain" data-id="Buat Subdomain">Create Subdomain</span>
+      <button class="btn" id="btnSubmit" type="button" data-aos="zoom-in" data-aos-delay="330">
+        <div class="sp"></div>
+        <span class="bt" id="tBtn">Create Subdomain</span>
       </button>
-
     </div>
 
-    <p class="secnote">
-      🔒 <span data-en="Token is sent directly to Cloudflare — never stored anywhere." data-id="Token dikirim langsung ke Cloudflare — tidak disimpan dimanapun.">Token is sent directly to Cloudflare — never stored anywhere.</span>
-    </p>
+    <p class="snote">🔒 <span id="tNote">Token dikirim langsung ke Cloudflare — tidak disimpan.</span></p>
   </div>
 
-  <!-- Result -->
   <div class="result" id="resultBox">
-    <div class="res-head">
-      <div class="res-ico" id="resIco"></div>
-      <span id="resTitle"></span>
-    </div>
-    <div id="resBody"></div>
+    <div class="rh"><div class="ri0" id="rIco"></div><span id="rTtl"></span></div>
+    <div id="rBdy"></div>
   </div>
-
 </div>
 
 <script>
-/* ── AOS ── */
 AOS.init({ once: true, easing: 'ease-out-quart', offset: 10 });
 
-/* ── Network nodes ── */
-(function() {
+(function () {
   const cv = document.getElementById('netCanvas');
   const cx = cv.getContext('2d');
-  let W, H, nodes;
-  const N = 34, D = 130;
-
+  let W, H, nd;
+  const N = 32, DIST = 125;
   function resize() { W = cv.width = innerWidth; H = cv.height = innerHeight; }
-
   function init() {
-    nodes = Array.from({length:N}, () => ({
-      x: Math.random()*W, y: Math.random()*H,
-      vx: (Math.random()-.5)*.3, vy: (Math.random()-.5)*.3,
-      r: Math.random()*1.8+1
+    nd = Array.from({ length: N }, () => ({
+      x: Math.random() * W, y: Math.random() * H,
+      vx: (Math.random() -.5) *.28, vy: (Math.random() -.5) *.28,
+      r: Math.random() * 1.7 + 1,
     }));
   }
-
-  function draw() {
-    cx.clearRect(0,0,W,H);
-    for (let i=0;i<nodes.length;i++) {
-      for (let j=i+1;j<nodes.length;j++) {
-        const dx=nodes[i].x-nodes[j].x, dy=nodes[i].y-nodes[j].y;
-        const d=Math.sqrt(dx*dx+dy*dy);
-        if (d<D) {
+  function frame() {
+    cx.clearRect(0, 0, W, H);
+    for (let i = 0; i < nd.length; i++) {
+      for (let j = i + 1; j < nd.length; j++) {
+        const dx = nd[i].x - nd[j].x, dy = nd[i].y - nd[j].y;
+        const d = Math.sqrt(dx * dx + dy * dy);
+        if (d < DIST) {
           cx.beginPath();
-          cx.moveTo(nodes[i].x,nodes[i].y);
-          cx.lineTo(nodes[j].x,nodes[j].y);
-          cx.strokeStyle=`rgba(96,165,250,${.15*(1-d/D)})`;
-          cx.lineWidth=.7; cx.stroke();
+          cx.moveTo(nd[i].x, nd[i].y);
+          cx.lineTo(nd[j].x, nd[j].y);
+          cx.strokeStyle = `rgba(96,165,250,${.14 * (1 - d / DIST)})`;
+          cx.lineWidth =.65; cx.stroke();
         }
       }
     }
-    nodes.forEach(n=>{
-      cx.beginPath(); cx.arc(n.x,n.y,n.r,0,Math.PI*2);
-      cx.fillStyle='rgba(96,165,250,.42)'; cx.fill();
+    nd.forEach(n => {
+      cx.beginPath(); cx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+      cx.fillStyle = 'rgba(96,165,250,.38)'; cx.fill();
+      n.x += n.vx; n.y += n.vy;
+      if (n.x < 0 || n.x > W) n.vx *= -1;
+      if (n.y < 0 || n.y > H) n.vy *= -1;
     });
+    requestAnimationFrame(frame);
   }
-
-  function tick() {
-    nodes.forEach(n=>{
-      n.x+=n.vx; n.y+=n.vy;
-      if(n.x<0||n.x>W)n.vx*=-1;
-      if(n.y<0||n.y>H)n.vy*=-1;
-    });
-    draw(); requestAnimationFrame(tick);
-  }
-
-  resize(); init(); tick();
-  window.addEventListener('resize',()=>{resize();init();});
+  resize(); init(); frame();
+  window.addEventListener('resize', () => { resize(); init(); });
 })();
 
-/* ── Wave ── */
-(function() {
+(function () {
   const cv = document.getElementById('waveCanvas');
   const cx = cv.getContext('2d');
-  let W, t=0;
-
-  function resize() { W=cv.width=innerWidth; cv.height=cv.offsetHeight; }
-
-  const WS=[
-    {a:24,f:.016,s:.9,c:'rgba(147,197,253,.22)',o:0},
-    {a:16,f:.022,s:1.3,c:'rgba(96,165,250,.14)',o:1.6},
-    {a:10,f:.03, s:.6, c:'rgba(59,130,246,.09)',o:3.1},
+  let W, t = 0;
+  const WS = [
+    { a: 22, f:.015, s:.85, c: 'rgba(147,197,253,.2)', o: 0 },
+    { a: 14, f:.022, s: 1.2, c: 'rgba(96,165,250,.13)', o: 1.5 },
+    { a: 9, f:.03, s:.6, c: 'rgba(59,130,246,.08)', o: 3.0 },
   ];
-
-  function draw() {
-    const H=cv.height; cx.clearRect(0,0,W,H); t+=.007;
-    WS.forEach(w=>{
-      cx.beginPath(); cx.moveTo(0,H);
-      for(let x=0;x<=W;x+=4){
-        const y=H*.48+Math.sin(x*w.f+t*w.s+w.o)*w.a;
-        cx.lineTo(x,y);
-      }
-      cx.lineTo(W,H); cx.closePath();
-      cx.fillStyle=w.c; cx.fill();
+  function resize() { W = cv.width = innerWidth; cv.height = cv.offsetHeight; }
+  function frame() {
+    const H = cv.height; cx.clearRect(0, 0, W, H); t +=.007;
+    WS.forEach(w => {
+      cx.beginPath(); cx.moveTo(0, H);
+      for (let x = 0; x <= W; x += 4)
+        cx.lineTo(x, H *.47 + Math.sin(x * w.f + t * w.s + w.o) * w.a);
+      cx.lineTo(W, H); cx.closePath();
+      cx.fillStyle = w.c; cx.fill();
     });
-    requestAnimationFrame(draw);
+    requestAnimationFrame(frame);
   }
-  resize(); draw();
-  window.addEventListener('resize',resize);
+  resize(); frame();
+  window.addEventListener('resize', resize);
 })();
 
-/* ── i18n ── */
-let currentLang = 'en';
-
-function setLang(lang) {
-  currentLang = lang;
-  document.getElementById('btnEN').classList.toggle('active', lang==='en');
-  document.getElementById('btnID').classList.toggle('active', lang==='id');
-
-  document.querySelectorAll('[data-en]').forEach(el => {
-    if (el.tagName==='INPUT') return;
-    el.textContent = el.dataset[lang] || el.dataset.en;
-  });
-  document.querySelectorAll('[data-ph-en]').forEach(el => {
-    el.placeholder = el.dataset[`ph${lang.charAt(0).toUpperCase()+lang.slice(1)}`] || el.dataset.phEn;
-  });
-}
-
-/* ── App ── */
-const $ = id => document.getElementById(id);
-const zEl  = $('zoneId'), acEl = $('accountId');
-const sdEl = $('subdomainName'), ipEl = $('ipTarget'), prEl = $('proxied');
-const btn  = $('btnSubmit');
-const rBox = $('resultBox'), rIco = $('resIco'), rTtl = $('resTitle'), rBdy = $('resBody');
-
-const LS = { z:'cf_zone', a:'cf_acc' };
-zEl.value  = localStorage.getItem(LS.z) || '';
-acEl.value = localStorage.getItem(LS.a) || '';
-
-let resolvedDomain = '';
-let dTimer;
-
-async function fetchDomain() {
-  /* We need a token to look up the zone name.
-     Token is not saved but we can try if it's filled. */
-  const z = zEl.value.trim();
-  /* Without a token input we skip silent lookup;
-     full name will be built at submit time via the same token */
-  resolvedDomain = '';
-}
-
-function validIP(ip) {
-  const p=ip.split('.');
-  return p.length===4 && p.every(x=>x!==''&&!isNaN(+x)&&+x>=0&&+x<=255&&String(+x)===x);
-}
-const esc  = s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-const escA = s=>String(s).replace(/'/g,'&#39;');
-
-function setLoad(on) { btn.disabled=on; btn.classList.toggle('loading',on); }
-
-const T = {
+let lang = 'en';
+const TX = {
   en: {
-    valFail:   'Validation Failed',
-    zoneReq:   'Zone ID is required',
-    tokenReq:  'API Token is required',
-    sdReq:     'Subdomain name is required',
-    sdFmt:     'Subdomain: letters, numbers, and hyphens only',
-    ipReq:     'Target IP is required',
-    ipFmt:     'Invalid IP format (e.g. 1.2.3.4)',
-    cfReject:  'Cloudflare rejected the request',
-    netFail:   'Request failed',
-    netMsg:    'Could not reach Cloudflare API.',
-    netHint:   'Make sure your browser is not blocking api.cloudflare.com',
-    success:   'Subdomain created successfully',
-    copied:    '✓ Copied',
-    copyBtn:   'Copy JSON',
+    tSub: 'Add a DNS A record directly via Cloudflare API.',
+    tSecAuth: 'Auth',
+    tSecDns: 'DNS Record',
+    tLblKey: 'API Token',
+    tLblSub: 'Subdomain',
+    tLblIp: 'Target IP',
+    tLblProxy: 'Proxied',
+    tBtn: 'Create Subdomain',
+    tHintSub: 'Enter prefix only — domain from Zone ID',
+    tNote: 'Token sent directly to Cloudflare — never stored.',
+    eZone: 'Zone ID is required',
+    eKey: 'API Token is required',
+    eSd: 'Subdomain is required',
+    eSdFmt: 'Subdomain: letters, numbers, hyphens only',
+    eIp: 'Target IP is required',
+    eIpFmt: 'Invalid IPv4 address',
+    valFail: 'Validation Failed',
+    cfErr: 'Cloudflare Error',
+    netErr: 'Request Failed',
+    netHint: 'Check that your browser allows requests to api.cloudflare.com',
+    ok: 'Subdomain created',
+    copied: '✓ Copied',
+    cpyBtn: 'Copy JSON',
   },
   id: {
-    valFail:   'Validasi Gagal',
-    zoneReq:   'Zone ID wajib diisi',
-    tokenReq:  'API Token wajib diisi',
-    sdReq:     'Nama subdomain wajib diisi',
-    sdFmt:     'Subdomain: huruf, angka, dan tanda hubung saja',
-    ipReq:     'IP target wajib diisi',
-    ipFmt:     'Format IP tidak valid (contoh: 1.2.3.4)',
-    cfReject:  'Cloudflare menolak request',
-    netFail:   'Request gagal',
-    netMsg:    'Tidak dapat terhubung ke Cloudflare API.',
-    netHint:   'Pastikan browser tidak memblokir api.cloudflare.com',
-    success:   'Subdomain berhasil dibuat',
-    copied:    '✓ Tersalin',
-    copyBtn:   'Copy JSON',
-  }
+    tSub: 'Tambah DNS record A langsung via Cloudflare API.',
+    tSecAuth: 'Autentikasi',
+    tSecDns: 'DNS Record',
+    tLblKey: 'API Token',
+    tLblSub: 'Subdomain',
+    tLblIp: 'IP Target',
+    tLblProxy: 'Proxied',
+    tBtn: 'Buat Subdomain',
+    tHintSub: 'Ketik prefix saja. Domain otomatis dari Zone ID',
+    tNote: 'Token dikirim langsung ke Cloudflare — tidak disimpan.',
+    eZone: 'Zone ID wajib diisi',
+    eKey: 'API Token wajib diisi',
+    eSd: 'Subdomain wajib diisi',
+    eSdFmt: 'Subdomain: huruf, angka, tanda hubung saja',
+    eIp: 'IP target wajib diisi',
+    eIpFmt: 'Format IPv4 tidak valid',
+    valFail: 'Validasi Gagal',
+    cfErr: 'Error Cloudflare',
+    netErr: 'Request Gagal',
+    netHint: 'Pastikan browser tidak memblokir api.cloudflare.com',
+    ok: 'Subdomain berhasil dibuat',
+    copied: '✓ Tersalin',
+    cpyBtn: 'Copy JSON',
+  },
 };
 
-function t(key) { return T[currentLang][key] || T.en[key]; }
+const TIDS = ['tSub','tSecAuth','tSecDns','tLblKey','tLblSub','tLblIp','tLblProxy','tBtn','tHintSub','tNote'];
+
+function setLang(l) {
+  lang = l;
+  document.getElementById('btnEN').classList.toggle('on', l === 'en');
+  document.getElementById('btnID').classList.toggle('on', l === 'id');
+  TIDS.forEach(id => { const el = document.getElementById(id); if (el) el.textContent = TX[l][id]; });
+}
+function t(k) { return TX[lang][k] || TX.en[k]; }
+
+const $ = id => document.getElementById(id);
+const zEl = $('zoneId');
+const tkEl = $('apiKey');
+const sdEl = $('subdomainName');
+const ipEl = $('ipTarget');
+const prEl = $('proxied');
+const btn = $('btnSubmit');
+const rBox = $('resultBox');
+const rIco = $('rIco');
+const rTtl = $('rTtl');
+const rBdy = $('rBdy');
+
+const LS = { z: 'cf_z' };
+zEl.value = localStorage.getItem(LS.z) || '';
+
+function validIP(ip) {
+  const p = ip.split('.');
+  return p.length === 4 && p.every(x => x!== '' &&!isNaN(+x) && +x >= 0 && +x <= 255 && String(+x) === x);
+}
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const escQ = s => String(s).replace(/'/g,'&#39;');
+
+function setLoad(on) { btn.disabled = on; btn.classList.toggle('loading', on); }
 
 function showResult(type, ico, title, body) {
-  rBox.className=`result ${type}`;
-  rBox.style.display='block';
-  rIco.textContent=ico; rTtl.textContent=title; rBdy.innerHTML=body;
-  rBox.scrollIntoView({behavior:'smooth',block:'nearest'});
+  rBox.className = `result ${type}`;
+  rBox.style.display = 'block';
+  rIco.textContent = ico;
+  rTtl.textContent = title;
+  rBdy.innerHTML = body;
+  rBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 window.copyJSON = id => {
-  const raw=document.getElementById(id)?.dataset.json||'';
-  navigator.clipboard.writeText(raw).then(()=>{
-    const b=document.querySelector('.copybtn');
-    if(b){b.textContent=t('copied');setTimeout(()=>b.textContent=t('copyBtn'),1500);}
+  const raw = document.getElementById(id)?.dataset.json || '';
+  navigator.clipboard.writeText(raw).then(() => {
+    const b = document.querySelector('.cpbtn');
+    if (b) { b.textContent = t('copied'); setTimeout(() => b.textContent = t('cpyBtn'), 1500); }
   });
 };
 
 btn.addEventListener('click', async () => {
-  const zone=zEl.value.trim(), sd=sdEl.value.trim(),
-        ip=ipEl.value.trim(), prx=prEl.checked;
+  const zone = zEl.value.trim();
+  const tk = tkEl.value.trim();
+  const sd = sdEl.value.trim();
+  const ip = ipEl.value.trim();
+  const prx = prEl.checked;
 
-  /* Get token from a prompt — we removed the token field,
-     so we'll look for it in session. Actually per user request
-     token field was removed; we need to re-read the requirement:
-     user said "api token gausah" = remove token field.
-     But CF API needs auth. We'll use Zone ID + Account ID
-     with the user-api-token approach via a hidden session prompt,
-     OR we keep token as a field but just not label it "API Token".
-     
-     Re-reading: user said remove "api token", not authentication.
-     The previous version had Global API Key + Email, then API Token.
-     User wants to remove token too? Let's keep minimal auth:
-     We need SOMETHING. We'll keep a single "API Key" password field
-     but call it simply "Key" — minimal, clean.
-     
-     Actually on re-read user said: "api token gausah" meaning
-     remove the token field from the UI. But without auth CF API
-     won't work. We must keep some auth.
-     
-     Best interpretation: remove the labeled "API Token" field
-     and replace with a simpler unlabeled-style or just "Key".
-     We'll read it from #apiKey which we need to add back quietly.
-  */
+  const errs = [];
+  if (!zone) errs.push(t('eZone'));
+  if (!tk) errs.push(t('eKey'));
+  if (!sd) errs.push(t('eSd'));
+  else if (!/^[a-zA-Z0-9*]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?$/.test(sd) && sd!== '*')
+             errs.push(t('eSdFmt'));
+  if (!ip) errs.push(t('eIp'));
+  else if (!validIP(ip)) errs.push(t('eIpFmt'));
 
-  const tk = document.getElementById('apiKey')?.value.trim() || '';
-
-  const errs=[];
-  if(!zone) errs.push(t('zoneReq'));
-  if(!tk)   errs.push(t('tokenReq'));
-  if(!sd)   errs.push(t('sdReq'));
-  else if(!/^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?$/.test(sd)&&sd!=='*')
-    errs.push(t('sdFmt'));
-  if(!ip)   errs.push(t('ipReq'));
-  else if(!validIP(ip)) errs.push(t('ipFmt'));
-
-  if(errs.length){
-    showResult('err','✕',t('valFail'),errs.map(e=>`<p class="errmsg">· ${esc(e)}</p>`).join(''));
+  if (errs.length) {
+    showResult('err', '✕', t('valFail'),
+      errs.map(e => `<p class="em">· ${esc(e)}</p>`).join(''));
     return;
   }
 
-  localStorage.setItem(LS.z,zone); localStorage.setItem(LS.a,acEl.value.trim());
-  setLoad(true); rBox.style.display='none';
+  localStorage.setItem(LS.z, zone);
+  setLoad(true);
+  rBox.style.display = 'none';
 
-  /* Resolve domain name first */
-  let domain='';
+  const hdrs = { 'Authorization': `Bearer ${tk}`, 'Content-Type': 'application/json' };
+
+  let domain = '';
   try {
-    const zr=await fetch(`https://api.cloudflare.com/client/v4/zones/${encodeURIComponent(zone)}`,
-      {headers:{Authorization:`Bearer ${tk}`,'Content-Type':'application/json'}});
-    const zd=await zr.json();
-    if(zd.success) domain=zd.result?.name||'';
-  } catch{}
-
-  const fullName = domain ? `${sd}.${domain}` : sd;
-
-  try {
-    const res=await fetch(
-      `https://api.cloudflare.com/client/v4/zones/${encodeURIComponent(zone)}/dns_records`,
-      {method:'POST',
-       headers:{Authorization:`Bearer ${tk}`,'Content-Type':'application/json'},
-       body:JSON.stringify({type:'A',name:fullName,content:ip,ttl:120,proxied:prx})}
+    const r = await fetch(
+      `https://api.cloudflare.com/client/v4/zones/${encodeURIComponent(zone)}`,
+      { headers: hdrs }
     );
-    const data=await res.json();
-    const json=JSON.stringify(data,null,2);
+    const d = await r.json();
+    if (d.success) {
+      domain = d.result?.name || '';
+    } else {
+      const em = d.errors?.[0]?.message || 'Unknown error';
+      const ec = d.errors?.[0]?.code? ` (${d.errors[0].code})` : '';
+      showResult('err', '✕', t('cfErr'), `<p class="em">${esc(em)}${ec}</p>`);
+      setLoad(false);
+      return;
+    }
+  } catch (e) {
+    showResult('err', '✕', t('netErr'),
+      `<p class="em">${esc(e.message)}</p>
+       <p class="em" style="font-size:.74rem;opacity:.5;margin-top:4px">${t('netHint')}</p>`);
+    setLoad(false);
+    return;
+  }
 
-    if(data.success){
-      const r=data.result;
-      showResult('ok','✓',t('success'),
-        `<div class="rgrid">
+  const fullName = domain? `${sd}.${domain}` : sd;
+  try {
+    const res = await fetch(
+      `https://api.cloudflare.com/client/v4/zones/${encodeURIComponent(zone)}/dns_records`,
+      {
+        method: 'POST',
+        headers: hdrs,
+        body: JSON.stringify({ type: 'A', name: fullName, content: ip, ttl: 120, proxied: prx }),
+      }
+    );
+    const data = await res.json();
+    const json = JSON.stringify(data, null, 2);
+
+    if (data.success) {
+      const r = data.result;
+      showResult('ok', '✓', t('ok'),
+        `<div class="rg">
           <div class="ri"><label>Subdomain</label><span>${esc(r.name)}</span></div>
           <div class="ri"><label>Type</label><span>${esc(r.type)}</span></div>
           <div class="ri"><label>IP</label><span>${esc(r.content)}</span></div>
-          <div class="ri"><label>Proxied</label><span>${r.proxied?'✅ Yes':'❌ No'}</span></div>
-          <div class="ri"><label>TTL</label><span>${r.ttl===1?'Auto':r.ttl+'s'}</span></div>
-          <div class="ri"><label>Record ID</label><span style="font-size:.71rem;opacity:.6">${esc(r.id)}</span></div>
+          <div class="ri"><label>Proxied</label><span>${r.proxied? '✅ Yes' : '❌ No'}</span></div>
+          <div class="ri"><label>TTL</label><span>${r.ttl === 1? 'Auto' : r.ttl + 's'}</span></div>
+          <div class="ri"><label>Record ID</label><span style="font-size:.7rem;opacity:.55">${esc(r.id)}</span></div>
         </div>
-        <span id="jh" data-json='${escA(json)}'></span>
-        <button class="copybtn" onclick="copyJSON('jh')">${t('copyBtn')}</button>`
+        <span id="jh" data-json='${escQ(json)}'></span>
+        <button class="cpbtn" onclick="copyJSON('jh')">${t('cpyBtn')}</button>`
       );
     } else {
-      const em=data.errors?.[0]?.message||'Unknown error';
-      const ec=data.errors?.[0]?.code?` (code ${data.errors[0].code})`:'';
-      showResult('err','✕',t('cfReject'),
-        `<p class="errmsg">${esc(em)}${ec}</p>
-         <span id="jh" data-json='${escA(json)}'></span>
-         <br/><br/><button class="copybtn" onclick="copyJSON('jh')">${t('copyBtn')}</button>`
+      const em = data.errors?.[0]?.message || 'Unknown error';
+      const ec = data.errors?.[0]?.code? ` (${data.errors[0].code})` : '';
+      showResult('err', '✕', t('cfErr'),
+        `<p class="em">${esc(em)}${ec}</p>
+         <span id="jh" data-json='${escQ(json)}'></span>
+         <button class="cpbtn" style="margin-top:10px" onclick="copyJSON('jh')">${t('cpyBtn')}</button>`
       );
     }
-  } catch(e){
-    showResult('err','✕',t('netFail'),
-      `<p class="errmsg">${esc(e.message)}</p>
-       <p class="errmsg" style="font-size:.78rem;opacity:.55;margin-top:5px">${t('netHint')}</p>`
+  } catch (e) {
+    showResult('err', '✕', t('netErr'),
+      `<p class="em">${esc(e.message)}</p>
+       <p class="em" style="font-size:.74rem;opacity:.5;margin-top:4px">${t('netHint')}</p>`
     );
-  } finally { setLoad(false); }
+  } finally {
+    setLoad(false);
+  }
 });
 </script>
 </body>
