@@ -21,11 +21,19 @@ module.exports = async (req, res) => {
       rawBody += chunk.toString();
     }
 
-    let zone, token, subdomain, ip, proxied;
+    let action = 'create';
+let zone, token, subdomain, ip, proxied, record_id;
 
     // Parse based on content type
-    const contentType = req.headers['content-type'] || '';
-    
+    const body = JSON.parse(rawBody);
+
+action = body?.action || 'create';
+record_id = body?.record_id || '';
+
+zone = body?.zone || '';
+token = body?.token || '';
+subdomain = body?.subdomain || '';
+ip = body?.ip || '';
     if (contentType.includes('application/json')) {
       // JSON body
       const body = JSON.parse(rawBody);
@@ -35,6 +43,8 @@ module.exports = async (req, res) => {
       ip = body?.ip || '';
       proxied = body?.proxied === 'true' || body?.proxied === true;
     } else if (contentType.includes('application/x-www-form-urlencoded')) {
+      action = params.get('action') || 'create';
+record_id = params.get('record_id') || '';
       // URL encoded form
       const params = new URLSearchParams(rawBody);
       zone = params.get('zone') || '';
@@ -71,6 +81,15 @@ module.exports = async (req, res) => {
           const match = part.match(/name="ip"[^\r\n]*\r\n\r\n([\s\S]*?)\r\n/);
           ip = match ? match[1].trim() : '';
         }
+        if (part.includes('name="action"')) {
+          const match = part.match(/name="action"[^\r\n]*\r\n\r\n([\s\S]*?)\r\n/);
+          action = match ? match[1].trim() : 'create';
+       }
+
+        if (part.includes('name="record_id"')) {
+          const match = part.match(/name="record_id"[^\r\n]*\r\n\r\n([\s\S]*?)\r\n/);
+         record_id = match ? match[1].trim() : '';
+       }
         if (part.includes('name="proxied"')) {
           const match = part.match(/name="proxied"[^\r\n]*\r\n\r\n([\s\S]*?)\r\n/);
           proxied = match ? match[1].trim() === 'true' : false;
@@ -79,12 +98,12 @@ module.exports = async (req, res) => {
     }
 
     // Validasi
-    if (!zone || !token || !subdomain || !ip) {
-      return res.status(400).json({
-        success: false,
-        errors: [{ message: 'Zone ID, Token, Subdomain, IP wajib diisi' }]
-      });
-    }
+    if (!zone || !token) {
+  return res.status(400).json({
+    success: false,
+    errors: [{ message: 'Zone ID dan Token wajib diisi' }]
+  });
+}
 
     // Step 1: Get domain from Zone ID
     const zoneRes = await fetch(`https://api.cloudflare.com/client/v4/zones/${encodeURIComponent(zone)}`, {
@@ -106,10 +125,65 @@ module.exports = async (req, res) => {
       );
     }
 
+    if (action === 'create') {
+
+  if (!subdomain || !ip) {
+    return res.status(400).json({
+      success: false,
+      errors: [{ message: 'Subdomain dan IP wajib diisi' }]
+    });
+  }
+
+    }
+
+    if (action === 'delete') {
+
+  if (!record_id) {
+    return res.status(400).json({
+      success: false,
+      errors: [{ message: 'Record ID wajib diisi' }]
+    });
+  }
+
+    }
+
     if (!zoneData.success) {
       return res.status(400).json(zoneData);
     }
 
+    
+if (action === 'list') {
+
+  const cfRes = await fetch(
+    `https://api.cloudflare.com/client/v4/zones/${encodeURIComponent(zone)}/dns_records`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  );
+
+  const data = await cfRes.json();
+
+  return res.status(cfRes.status).json(data);
+}
+
+if (action === 'delete') {
+
+  const cfRes = await fetch(
+    `https://api.cloudflare.com/client/v4/zones/${encodeURIComponent(zone)}/dns_records/${record_id}`,
+    {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  );
+
+  const data = await cfRes.json();
+
+  return res.status(cfRes.status).json(data);
+}
     const domain = zoneData.result.name;
     const fullName = `${subdomain}.${domain}`;
 
