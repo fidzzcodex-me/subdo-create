@@ -6,42 +6,22 @@
 <title>CF Subdomain Creator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css"/>
 <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
 <style>
 :root {
-  --bg: #eef4fd;
-  --card: #ffffff;
-  --s2: #f4f9ff;
-  --b100: #dbeafe;
-  --b200: #bfdbfe;
-  --b300: #93c5fd;
-  --b400: #60a5fa;
-  --b500: #3b82f6;
-  --b600: #2563eb;
-  --t900: #0f172a;
-  --t600: #475569;
-  --t400: #94a3b8;
-  --bd: #e1eaf8;
-  --r: 10px;
-  --rlg: 16px;
-  --sh: 0 6px 28px rgba(37,99,235,.09), 0 1px 4px rgba(37,99,235,.05);
+  --bg: #eef4fd; --card: #ffffff; --s2: #f4f9ff; --b100: #dbeafe; --b200: #bfdbfe;
+  --b300: #93c5fd; --b400: #60a5fa; --b500: #3b82f6; --b600: #2563eb;
+  --t900: #0f172a; --t600: #475569; --t400: #94a3b8; --bd: #e1eaf8;
+  --r: 10px; --rlg: 16px; --sh: 0 6px 28px rgba(37,99,235,.09), 0 1px 4px rgba(37,99,235,.05);
   --shb: 0 4px 14px rgba(37,99,235,.28);
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
-body {
-  font-family: 'DM Sans', sans-serif;
-  background: var(--bg);
-  color: var(--t900);
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0 16px 80px;
-  overflow-x: hidden;
-}
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t900);
+  min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+  padding: 0 16px 80px; overflow-x: hidden; }
 .blobs { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
 .blob { position: absolute; border-radius: 50%; filter: blur(90px); opacity:.4; animation: drift 22s ease-in-out infinite alternate; }
 .b1 { width: 480px; height: 480px; background: radial-gradient(#bfdbfe, #93c5fd88); top: -80px; left: -60px; }
@@ -143,7 +123,7 @@ input:focus { border-color: var(--b500); box-shadow: 0 0 0 3px rgba(59,130,246,.
   <header class="header" data-aos="fade-down" data-aos-duration="580">
     <div class="pill"><span class="pdot"></span>Cloudflare API v4</div>
     <h1><span class="grad">Subdomain</span> Creator</h1>
-    <p class="sub" id="tSub">Add a DNS A record directly via Cloudflare API.</p>
+    <p class="sub" id="tSub">Add a DNS A record via proxy server.</p>
   </header>
 
   <div class="chips" data-aos="fade-up" data-aos-delay="70" data-aos-duration="520">
@@ -214,7 +194,7 @@ input:focus { border-color: var(--b500); box-shadow: 0 0 0 3px rgba(59,130,246,.
       </button>
     </div>
 
-    <p class="snote">🔒 <span id="tNote">Token dikirim langsung ke Cloudflare — tidak disimpan.</span></p>
+    <p class="snote">🔒 <span id="tNote">Token dikirim ke proxy server lu sendiri</span></p>
   </div>
 
   <div class="result" id="resultBox">
@@ -295,7 +275,7 @@ AOS.init({ once: true, easing: 'ease-out-quart', offset: 10 });
 let lang = 'en';
 const TX = {
   en: {
-    tSub: 'Add a DNS A record directly via Cloudflare API.',
+    tSub: 'Add a DNS A record via proxy server.',
     tSecAuth: 'Auth',
     tSecDns: 'DNS Record',
     tLblKey: 'API Token',
@@ -304,7 +284,7 @@ const TX = {
     tLblProxy: 'Proxied',
     tBtn: 'Create Subdomain',
     tHintSub: 'Enter prefix only — domain from Zone ID',
-    tNote: 'Token sent directly to Cloudflare — never stored.',
+    tNote: 'Token sent to your proxy server',
     eZone: 'Zone ID is required',
     eKey: 'API Token is required',
     eSd: 'Subdomain is required',
@@ -314,13 +294,12 @@ const TX = {
     valFail: 'Validation Failed',
     cfErr: 'Cloudflare Error',
     netErr: 'Request Failed',
-    netHint: 'Check that your browser allows requests to api.cloudflare.com',
     ok: 'Subdomain created',
     copied: '✓ Copied',
     cpyBtn: 'Copy JSON',
   },
   id: {
-    tSub: 'Tambah DNS record A langsung via Cloudflare API.',
+    tSub: 'Tambah DNS record A via proxy server.',
     tSecAuth: 'Autentikasi',
     tSecDns: 'DNS Record',
     tLblKey: 'API Token',
@@ -329,7 +308,7 @@ const TX = {
     tLblProxy: 'Proxied',
     tBtn: 'Buat Subdomain',
     tHintSub: 'Ketik prefix saja. Domain otomatis dari Zone ID',
-    tNote: 'Token dikirim langsung ke Cloudflare — tidak disimpan.',
+    tNote: 'Token dikirim ke proxy server lu sendiri',
     eZone: 'Zone ID wajib diisi',
     eKey: 'API Token wajib diisi',
     eSd: 'Subdomain wajib diisi',
@@ -339,7 +318,6 @@ const TX = {
     valFail: 'Validasi Gagal',
     cfErr: 'Error Cloudflare',
     netErr: 'Request Gagal',
-    netHint: 'Pastikan browser tidak memblokir api.cloudflare.com',
     ok: 'Subdomain berhasil dibuat',
     copied: '✓ Tersalin',
     cpyBtn: 'Copy JSON',
@@ -423,42 +401,18 @@ btn.addEventListener('click', async () => {
   setLoad(true);
   rBox.style.display = 'none';
 
-  const hdrs = { 'Authorization': `Bearer ${tk}`, 'Content-Type': 'application/json' };
-
-  let domain = '';
   try {
-    const r = await fetch(
-      `https://api.cloudflare.com/client/v4/zones/${encodeURIComponent(zone)}`,
-      { headers: hdrs }
-    );
-    const d = await r.json();
-    if (d.success) {
-      domain = d.result?.name || '';
-    } else {
-      const em = d.errors?.[0]?.message || 'Unknown error';
-      const ec = d.errors?.[0]?.code? ` (${d.errors[0].code})` : '';
-      showResult('err', '✕', t('cfErr'), `<p class="em">${esc(em)}${ec}</p>`);
-      setLoad(false);
-      return;
-    }
-  } catch (e) {
-    showResult('err', '✕', t('netErr'),
-      `<p class="em">${esc(e.message)}</p>
-       <p class="em" style="font-size:.74rem;opacity:.5;margin-top:4px">${t('netHint')}</p>`);
-    setLoad(false);
-    return;
-  }
+    const formData = new FormData();
+    formData.append('zone', zone);
+    formData.append('token', tk);
+    formData.append('subdomain', sd);
+    formData.append('ip', ip);
+    formData.append('proxied', prx);
 
-  const fullName = domain? `${sd}.${domain}` : sd;
-  try {
-    const res = await fetch(
-      `https://api.cloudflare.com/client/v4/zones/${encodeURIComponent(zone)}/dns_records`,
-      {
-        method: 'POST',
-        headers: hdrs,
-        body: JSON.stringify({ type: 'A', name: fullName, content: ip, ttl: 120, proxied: prx }),
-      }
-    );
+    const res = await fetch('/proxy.php', {
+      method: 'POST',
+      body: formData
+    });
     const data = await res.json();
     const json = JSON.stringify(data, null, 2);
 
@@ -487,8 +441,7 @@ btn.addEventListener('click', async () => {
     }
   } catch (e) {
     showResult('err', '✕', t('netErr'),
-      `<p class="em">${esc(e.message)}</p>
-       <p class="em" style="font-size:.74rem;opacity:.5;margin-top:4px">${t('netHint')}</p>`
+      `<p class="em">${esc(e.message)}</p>`
     );
   } finally {
     setLoad(false);
