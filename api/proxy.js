@@ -25,18 +25,19 @@ module.exports = async (req, res) => {
 let zone, token, subdomain, ip, proxied, record_id;
 
     // Parse based on content type
-    const body = JSON.parse(rawBody);
-
-action = body?.action || 'create';
-record_id = body?.record_id || '';
-
-zone = body?.zone || '';
-token = body?.token || '';
-subdomain = body?.subdomain || '';
-ip = body?.ip || '';
-    const contentType = req.headers['content-type'] || '';
     if (contentType.includes('application/json')) {
-      // JSON body
+  const body = JSON.parse(rawBody);
+
+  action = body?.action || 'create';
+  record_id = body?.record_id || '';
+
+  zone = body?.zone || '';
+  token = body?.token || '';
+  subdomain = body?.subdomain || '';
+  ip = body?.ip || '';
+
+  proxied = body?.proxied === 'true' || body?.proxied === true;
+}
       
       proxied = body?.proxied === 'true' || body?.proxied === true;
     } else if (contentType.includes('application/x-www-form-urlencoded')) {
