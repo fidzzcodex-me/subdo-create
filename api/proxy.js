@@ -34,19 +34,16 @@ zone = body?.zone || '';
 token = body?.token || '';
 subdomain = body?.subdomain || '';
 ip = body?.ip || '';
+    const contentType = req.headers['content-type'] || '';
     if (contentType.includes('application/json')) {
       // JSON body
-      const body = JSON.parse(rawBody);
-      zone = body?.zone || '';
-      token = body?.token || '';
-      subdomain = body?.subdomain || '';
-      ip = body?.ip || '';
+      
       proxied = body?.proxied === 'true' || body?.proxied === true;
     } else if (contentType.includes('application/x-www-form-urlencoded')) {
-      action = params.get('action') || 'create';
-record_id = params.get('record_id') || '';
-      // URL encoded form
       const params = new URLSearchParams(rawBody);
+
+action = params.get('action') || 'create';
+record_id = params.get('record_id') || '';
       zone = params.get('zone') || '';
       token = params.get('token') || '';
       subdomain = params.get('subdomain') || '';
