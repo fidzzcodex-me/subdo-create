@@ -26,8 +26,9 @@ let zone, token, subdomain, ip, proxied, record_id;
 
     // Parse based on content type
     const contentType = req.headers['content-type'] || '';
-    if (contentType.includes('application/json')) {
-  if (contentType.includes('application/json')) {
+
+if (contentType.includes('application/json')) {
+
   const body = JSON.parse(rawBody);
 
   action = body?.action || 'create';
@@ -41,24 +42,29 @@ let zone, token, subdomain, ip, proxied, record_id;
   proxied = body?.proxied === 'true' || body?.proxied === true;
 
 } else if (contentType.includes('application/x-www-form-urlencoded')) {
-      const params = new URLSearchParams(rawBody);
 
-action = params.get('action') || 'create';
-record_id = params.get('record_id') || '';
-      zone = params.get('zone') || '';
-      token = params.get('token') || '';
-      subdomain = params.get('subdomain') || '';
-      ip = params.get('ip') || '';
-      proxied = params.get('proxied') === 'true';
-    } else if (contentType.includes('multipart/form-data')) {
-      // FormData - parse boundary
-      const boundary = contentType.split('boundary=')[1];
-      if (!boundary) {
-        return res.status(400).json({
-          success: false,
-          errors: [{ message: 'Invalid multipart boundary' }]
-        });
-      }
+  const params = new URLSearchParams(rawBody);
+
+  action = params.get('action') || 'create';
+  record_id = params.get('record_id') || '';
+
+  zone = params.get('zone') || '';
+  token = params.get('token') || '';
+  subdomain = params.get('subdomain') || '';
+  ip = params.get('ip') || '';
+
+  proxied = params.get('proxied') === 'true';
+
+} else if (contentType.includes('multipart/form-data')) {
+
+  const boundary = contentType.split('boundary=')[1];
+
+  if (!boundary) {
+    return res.status(400).json({
+      success: false,
+      errors: [{ message: 'Invalid multipart boundary' }]
+    });
+  }
 
       const parts = rawBody.split(`--${boundary}`);
       
