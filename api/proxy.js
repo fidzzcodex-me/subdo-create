@@ -1,118 +1,153 @@
 module.exports = async (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.setHeader('Content-Type', 'application/json');
+// CORS headers
+res.setHeader('Access-Control-Allow-Origin', '*');
+res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+res.setHeader('Content-Type', 'application/json');
 
-  if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method!== 'POST') return res.status(405).json({ success: false, error: 'Method not allowed' });
+if (req.method === 'OPTIONS') {
+return res.status(200).end();
+}
 
-  try {
-    let rawBody = '';
-    for await (const chunk of req) rawBody += chunk.toString();
+if (req.method !== 'POST') {
+return res.status(405).json({ success: false, error: 'Method not allowed' });
+}
 
-    const contentType = req.headers['content-type'] || '';
-    let action = 'create';
-    let zone, token, subdomain, ip, proxied = false, record_id;
+try {
+// Collect raw body
+let rawBody = '';
 
-    if (contentType.includes('application/json')) {
-      const body = JSON.parse(rawBody);
-      action = body?.action || 'create';
-      record_id = body?.record_id || '';
-      zone = body?.zone || '';
-      token = body?.token || '';
-      subdomain = body?.subdomain || '';
-      ip = body?.ip || '';
-      proxied = body?.proxied === true || body?.proxied === 'true';
-    }
-    else if (contentType.includes('application/x-www-form-urlencoded')) {
-      const params = new URLSearchParams(rawBody);
-      action = params.get('action') || 'create';
-      record_id = params.get('record_id') || '';
-      zone = params.get('zone') || '';
-      token = params.get('token') || '';
-      subdomain = params.get('subdomain') || '';
-      ip = params.get('ip') || '';
-      proxied = params.get('proxied') === 'true';
-    }
-    else if (contentType.includes('multipart/form-data')) {
-      const boundary = contentType.split('boundary=')[1];
-      if (!boundary) return res.status(400).json({ success: false, errors: [{ message: 'Invalid multipart boundary' }] });
+for await (const chunk of req) {  
+  rawBody += chunk.toString();  
+}  
 
-      const parts = rawBody.split(`--${boundary}`);
-      const getVal = (name) => {
-        const part = parts.find(p => p.includes(`name="${name}"`));
-        if (!part) return '';
-        const match = part.match(/name="[^"]+"[^\r\n]*\r\n\r\n([\s\S]*?)\r\n/);
-        return match? match[1].trim() : '';
-      };
+let zone, token, subdomain, ip, proxied;  
 
-      action = getVal('action') || 'create';
-      record_id = getVal('record_id');
-      zone = getVal('zone');
-      token = getVal('token');
-      subdomain = getVal('subdomain');
-      ip = getVal('ip');
-      proxied = getVal('proxied') === 'true';
-    }
-    else {
-      // Ini saran si pler 👇 biar errornya jelas
-      return res.status(400).json({
-        success: false,
-        errors: [{ message: 'Unsupported Content-Type. Use application/json or application/x-www-form-urlencoded' }]
-      });
-    }
+// Parse based on content type  
+const contentType = req.headers['content-type'] || '';  
+  
+if (contentType.includes('application/json')) {  
+  // JSON body  
+  const body = JSON.parse(rawBody);  
+  zone = body?.zone || '';  
+  token = body?.token || '';  
+  subdomain = body?.subdomain || '';  
+  ip = body?.ip || '';  
+  proxied = body?.proxied === 'true' || body?.proxied === true;  
+} else if (contentType.includes('application/x-www-form-urlencoded')) {  
+  // URL encoded form  
+  const params = new URLSearchParams(rawBody);  
+  zone = params.get('zone') || '';  
+  token = params.get('token') || '';  
+  subdomain = params.get('subdomain') || '';  
+  ip = params.get('ip') || '';  
+  proxied = params.get('proxied') === 'true';  
+} else if (contentType.includes('multipart/form-data')) {  
+  // FormData - parse boundary  
+  const boundary = contentType.split('boundary=')[1];  
+  if (!boundary) {  
+    return res.status(400).json({  
+      success: false,  
+      errors: [{ message: 'Invalid multipart boundary' }]  
+    });  
+  }  
 
-    if (!zone ||!token) {
-      return res.status(400).json({ success: false, errors: [{ message: 'Zone ID dan Token wajib diisi' }] });
-    }
+  const parts = rawBody.split(`--${boundary}`);  
+    
+  for (const part of parts) {  
+    if (part.includes('name="zone"')) {  
+      const match = part.match(/name="zone"[^\r\n]*\r\n\r\n([\s\S]*?)\r\n/);  
+      zone = match ? match[1].trim() : '';  
+    }  
+    if (part.includes('name="token"')) {  
+      const match = part.match(/name="token"[^\r\n]*\r\n\r\n([\s\S]*?)\r\n/);  
+      token = match ? match[1].trim() : '';  
+    }  
+    if (part.includes('name="subdomain"')) {  
+      const match = part.match(/name="subdomain"[^\r\n]*\r\n\r\n([\s\S]*?)\r\n/);  
+      subdomain = match ? match[1].trim() : '';  
+    }  
+    if (part.includes('name="ip"')) {  
+      const match = part.match(/name="ip"[^\r\n]*\r\n\r\n([\s\S]*?)\r\n/);  
+      ip = match ? match[1].trim() : '';  
+    }  
+    if (part.includes('name="proxied"')) {  
+      const match = part.match(/name="proxied"[^\r\n]*\r\n\r\n([\s\S]*?)\r\n/);  
+      proxied = match ? match[1].trim() === 'true' : false;  
+    }  
+  }  
+}  
 
-    const zoneRes = await fetch(`https://api.cloudflare.com/client/v4/zones/${encodeURIComponent(zone)}`, {
-      method: 'GET',
-      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
-    });
-    const zoneData = await zoneRes.json();
+// Validasi  
+if (!zone || !token || !subdomain || !ip) {  
+  return res.status(400).json({  
+    success: false,  
+    errors: [{ message: 'Zone ID, Token, Subdomain, IP wajib diisi' }]  
+  });  
+}  
 
-    if (!zoneRes.ok ||!zoneData.success) {
-      return res.status(zoneRes.status).json(zoneData);
-    }
+// Step 1: Get domain from Zone ID  
+const zoneRes = await fetch(`https://api.cloudflare.com/client/v4/zones/${encodeURIComponent(zone)}`, {  
+  method: 'GET',  
+  headers: {  
+    'Authorization': `Bearer ${token}`,  
+    'Content-Type': 'application/json'  
+  }  
+});  
 
-    const domain = zoneData.result.name;
+const zoneData = await zoneRes.json().catch(() => null);  
 
-    if (action === 'list') {
-      const cfRes = await fetch(`https://api.cloudflare.com/client/v4/zones/${zone}/dns_records`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await cfRes.json();
-      return res.status(cfRes.status).json(data);
-    }
+if (!zoneRes.ok || !zoneData) {  
+  return res.status(zoneRes.status).json(  
+    zoneData || {   
+      success: false,   
+      errors: [{ message: `Zone ID tidak valid atau Token salah. HTTP: ${zoneRes.status}` }]   
+    }  
+  );  
+}  
 
-    if (action === 'delete') {
-      if (!record_id) return res.status(400).json({ success: false, errors: [{ message: 'Record ID wajib diisi' }] });
-      const cfRes = await fetch(`https://api.cloudflare.com/client/v4/zones/${zone}/dns_records/${record_id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await cfRes.json();
-      return res.status(cfRes.status).json(data);
-    }
+if (!zoneData.success) {  
+  return res.status(400).json(zoneData);  
+}  
 
-    if (!subdomain ||!ip) {
-      return res.status(400).json({ success: false, errors: [{ message: 'Subdomain dan IP wajib diisi' }] });
-    }
+const domain = zoneData.result.name;  
+const fullName = `${subdomain}.${domain}`;  
 
-    const fullName = `${subdomain}.${domain}`;
-    const dnsRes = await fetch(`https://api.cloudflare.com/client/v4/zones/${zone}/dns_records`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: 'A', name: fullName, content: ip, ttl: 120, proxied })
-    });
+// Step 2: Create DNS record  
+const dnsRes = await fetch(  
+  `https://api.cloudflare.com/client/v4/zones/${encodeURIComponent(zone)}/dns_records`,  
+  {  
+    method: 'POST',  
+    headers: {  
+      'Authorization': `Bearer ${token}`,  
+      'Content-Type': 'application/json'  
+    },  
+    body: JSON.stringify({  
+      type: 'A',  
+      name: fullName,  
+      content: ip,  
+      ttl: 120,  
+      proxied: proxied  
+    })  
+  }  
+);  
 
-    const dnsData = await dnsRes.json();
-    res.status(dnsRes.status).json(dnsData);
+const dnsData = await dnsRes.json().catch(() => null);  
+  
+if (!dnsData) {  
+  return res.status(500).json({  
+    success: false,  
+    errors: [{ message: 'Invalid response from Cloudflare' }]  
+  });  
+}  
 
-  } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ success: false, errors: [{ message: error.message || 'Internal server error' }] });
-  }
+res.status(dnsRes.status).json(dnsData);
+
+} catch (error) {
+console.error('Error:', error);
+res.status(500).json({
+success: false,
+errors: [{ message: error.message || 'Internal server error' }]
+});
+}
 };
