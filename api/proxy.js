@@ -13,17 +13,36 @@ module.exports = async (req, res) => {
     return res.status(405).json({ success: false, error: 'Method not allowed' });
   }
 
-  const { zone, token, subdomain, ip, proxied } = req.body;
-
-  // Validasi
-  if (!zone || !token || !subdomain || !ip) {
-    return res.status(400).json({
-      success: false,
-      errors: [{ message: 'Zone ID, Token, Subdomain, IP wajib diisi' }]
-    });
-  }
-
   try {
+    // Parse FormData atau JSON body
+    let zone, token, subdomain, ip, proxied;
+
+    if (req.headers['content-type']?.includes('application/json')) {
+      // JSON body
+      zone = req.body?.zone || '';
+      token = req.body?.token || '';
+      subdomain = req.body?.subdomain || '';
+      ip = req.body?.ip || '';
+      proxied = req.body?.proxied === 'true' || req.body?.proxied === true;
+    } else {
+      // FormData - parse manually dari string body
+      const body = typeof req.body === 'string' ? req.body : Buffer.from(req.body || '').toString();
+      const params = new URLSearchParams(body);
+      zone = params.get('zone') || '';
+      token = params.get('token') || '';
+      subdomain = params.get('subdomain') || '';
+      ip = params.get('ip') || '';
+      proxied = params.get('proxied') === 'true';
+    }
+
+    // Validasi
+    if (!zone || !token || !subdomain || !ip) {
+      return res.status(400).json({
+        success: false,
+        errors: [{ message: 'Zone ID, Token, Subdomain, IP wajib diisi' }]
+      });
+    }
+
     // Step 1: Get domain from Zone ID
     const zoneRes = await fetch(`https://api.cloudflare.com/client/v4/zones/${encodeURIComponent(zone)}`, {
       method: 'GET',
@@ -33,17 +52,17 @@ module.exports = async (req, res) => {
       }
     });
 
-    if (!zoneRes.ok) {
-      const errorData = await zoneRes.json().catch(() => ({}));
+    const zoneData = await zoneRes.json().catch(() => null);
+
+    if (!zoneRes.ok || !zoneData) {
       return res.status(zoneRes.status).json(
-        errorData || { 
+        zoneData || { 
           success: false, 
           errors: [{ message: `Zone ID tidak valid atau Token salah. HTTP: ${zoneRes.status}` }] 
         }
       );
     }
 
-    const zoneData = await zoneRes.json();
     if (!zoneData.success) {
       return res.status(400).json(zoneData);
     }
@@ -65,18 +84,27 @@ module.exports = async (req, res) => {
           name: fullName,
           content: ip,
           ttl: 120,
-          proxied: proxied === 'true' || proxied === true
+          proxied: proxied
         })
       }
     );
 
-    const dnsData = await dnsRes.json();
+    const dnsData = await dnsRes.json().catch(() => null);
+    
+    if (!dnsData) {
+      return res.status(500).json({
+        success: false,
+        errors: [{ message: 'Invalid response from Cloudflare' }]
+      });
+    }
+
     res.status(dnsRes.status).json(dnsData);
 
   } catch (error) {
+    console.error('Error:', error);
     res.status(500).json({
       success: false,
-      errors: [{ message: error.message }]
+      errors: [{ message: error.message || 'Internal server error' }]
     });
   }
 };
