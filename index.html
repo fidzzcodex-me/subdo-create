@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CF Manager</title>
+<meta property="og:title" content="CF Manager"/>
+<meta property="og:description" content="Cloudflare Management Dashboard"/>
+<meta property="og:image" content="https://files.catbox.moe/vs9eln.webp"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css"/>
+<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+<style>
+:root {
+  --r:10px;--rlg:16px;--rxl:22px;
+  --trans:.22s cubic-bezier(.4,0,.2,1);
+  --sidebar-w:240px;--sidebar-col:64px;--topbar-h:52px;
+}
+[data-theme="dark"] {
+  --bg:#0b0f1a;--bg2:#0f1525;--card:#131929;--card2:#1a2236;
+  --border:rgba(99,135,255,.13);--border2:rgba(99,135,255,.22);
+  --t0:#f0f4ff;--t1:#a8b8d8;--t2:#5a6a8a;
+  --b300:#6387ff;--b400:#4f72f7;--b500:#3a5de8;--b600:#2847c9;
+  --acc:#00d4aa;--red:#ff4d6a;--red2:#cc2f4a;--amber:#f59e0b;
+  --sh:0 8px 40px rgba(0,0,0,.55),0 1px 0 rgba(99,135,255,.08);
+  --shb:0 6px 28px rgba(63,99,255,.35);--glow:0 0 0 3px rgba(63,99,255,.18);
+  --sb-bg:#0d1220;--sb-hov:rgba(99,135,255,.08);--sb-act:rgba(99,135,255,.15);
+}
+[data-theme="light"] {
+  --bg:#edf4fd;--bg2:#f4f9ff;--card:#fff;--card2:#f4f9ff;
+  --border:rgba(37,99,235,.12);--border2:rgba(37,99,235,.25);
+  --t0:#0f172a;--t1:#475569;--t2:#94a3b8;
+  --b300:#93c5fd;--b400:#60a5fa;--b500:#3b82f6;--b600:#2563eb;
+  --acc:#059669;--red:#ef4444;--red2:#dc2626;--amber:#d97706;
+  --sh:0 6px 28px rgba(37,99,235,.09),0 1px 4px rgba(37,99,235,.05);
+  --shb:0 4px 14px rgba(37,99,235,.28);--glow:0 0 0 3px rgba(59,130,246,.14);
+  --sb-bg:#e8f0fd;--sb-hov:rgba(37,99,235,.06);--sb-act:rgba(37,99,235,.12);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--t0);min-height:100vh;overflow-x:hidden;transition:background var(--trans),color var(--trans)}
+
+/* BG */
+.aurora{position:fixed;inset:0;z-index:0;pointer-events:none}
+.aurora-blob{position:absolute;border-radius:50%;filter:blur(120px);animation:aurora-drift 20s ease-in-out infinite alternate}
+[data-theme="dark"] .ab1{width:600px;height:400px;background:radial-gradient(#1e3cff22,transparent 70%);top:-100px;left:-150px}
+[data-theme="dark"] .ab2{width:500px;height:500px;background:radial-gradient(#00d4aa18,transparent 70%);top:30%;right:-200px;animation-delay:-8s;animation-duration:25s}
+[data-theme="dark"] .ab3{width:400px;height:300px;background:radial-gradient(#6b21ff14,transparent 70%);bottom:0;left:20%;animation-delay:-14s;animation-duration:18s}
+[data-theme="light"] .ab1{width:600px;height:400px;background:radial-gradient(#bfdbfe55,transparent 70%);top:-100px;left:-150px}
+[data-theme="light"] .ab2{width:500px;height:500px;background:radial-gradient(#d1fae544,transparent 70%);top:30%;right:-200px;animation-delay:-8s}
+[data-theme="light"] .ab3{width:400px;height:300px;background:radial-gradient(#c7d2fe33,transparent 70%);bottom:0;left:20%;animation-delay:-14s}
+@keyframes aurora-drift{0%{transform:translate(0,0) scale(1)}50%{transform:translate(30px,-20px) scale(1.05)}100%{transform:translate(-15px,25px) scale(.95)}}
+.bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:44px 44px;mask-image:radial-gradient(ellipse 80% 60% at 50% 0%,black 20%,transparent 80%);opacity:.5}
+canvas#nc{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+/* TOPBAR */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:300;height:var(--topbar-h);display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:var(--card);border-bottom:1px solid var(--border);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);transition:background var(--trans)}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.hb{width:34px;height:34px;border-radius:9px;border:1px solid var(--border2);background:var(--card2);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;transition:all var(--trans);flex-shrink:0}
+.hb:hover{background:var(--card);border-color:var(--b400)}
+.hbl{width:14px;height:1.5px;background:var(--t1);border-radius:2px;transition:all var(--trans)}
+.hb.open .hbl:nth-child(1){transform:translateY(5.5px) rotate(45deg)}
+.hb.open .hbl:nth-child(2){opacity:0;transform:scaleX(0)}
+.hb.open .hbl:nth-child(3){transform:translateY(-5.5px) rotate(-45deg)}
+.brand{display:flex;align-items:center;gap:9px;font-family:'DM Mono',monospace;font-size:.78rem;font-weight:500;color:var(--t1)}
+.brand-dot{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--b500),var(--acc));display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(63,99,255,.3);flex-shrink:0}
+.brand-dot svg{width:14px;height:14px;color:#fff}
+.page-title-bar{font-size:.82rem;font-weight:600;color:var(--t1);font-family:'DM Mono',monospace}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.lang-sw{display:inline-flex;align-items:center;border:1px solid var(--border2);border-radius:8px;overflow:hidden;background:var(--card2)}
+.lang-sw button{padding:4px 10px;border:none;background:none;cursor:pointer;font-family:'Outfit',sans-serif;font-size:.69rem;font-weight:600;color:var(--t2);transition:background var(--trans),color var(--trans)}
+.lang-sw button.on{background:var(--b500);color:#fff}
+.lsep{width:1px;height:16px;background:var(--border2)}
+.theme-btn{width:34px;height:34px;border-radius:9px;border:1px solid var(--border2);background:var(--card2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--trans);color:var(--t1)}
+.theme-btn:hover{background:var(--card);border-color:var(--b400);color:var(--t0)}
+.theme-btn svg{width:15px;height:15px}
+.icon-sun{display:none}.icon-moon{display:block}
+[data-theme="light"] .icon-sun{display:block}[data-theme="light"] .icon-moon{display:none}
+.cred-badge{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--card2);font-family:'DM Mono',monospace;font-size:.65rem;color:var(--t2);cursor:pointer;transition:all var(--trans)}
+.cred-badge:hover{border-color:var(--b400);color:var(--b300)}
+.cdot{width:6px;height:6px;border-radius:50%;background:var(--t2);flex-shrink:0;transition:background var(--trans)}
+.cdot.on{background:var(--acc);box-shadow:0 0 5px rgba(0,212,170,.4);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,212,170,.4)}50%{box-shadow:0 0 0 4px rgba(0,212,170,0)}}
+
+/* SIDEBAR */
+.sidebar{position:fixed;left:0;top:var(--topbar-h);bottom:0;width:var(--sidebar-w);z-index:200;background:var(--sb-bg);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:width var(--trans),transform var(--trans);overflow:hidden}
+.sidebar.col{width:var(--sidebar-col)}
+.sidebar.mhide{transform:translateX(-100%)}
+.sb-inner{flex:1;overflow-y:auto;overflow-x:hidden;padding:12px 8px}
+.sb-inner::-webkit-scrollbar{width:3px}
+.sb-inner::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+.sb-sec{font-family:'DM Mono',monospace;font-size:.55rem;font-weight:500;color:var(--t2);letter-spacing:.8px;text-transform:uppercase;padding:10px 10px 4px;white-space:nowrap;transition:opacity var(--trans),height var(--trans),padding var(--trans)}
+.sidebar.col .sb-sec{opacity:0;height:0;padding:0;overflow:hidden}
+.ni{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;cursor:pointer;color:var(--t1);font-size:.82rem;font-weight:500;transition:all var(--trans);position:relative;white-space:nowrap;overflow:hidden;user-select:none}
+.ni:hover{background:var(--sb-hov);color:var(--t0)}
+.ni.active{background:var(--sb-act);color:var(--b300)}
+.ni.active::before{content:'';position:absolute;left:0;top:4px;bottom:4px;width:3px;background:var(--b400);border-radius:0 3px 3px 0}
+.ni-ico{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--card2);border:1px solid var(--border);transition:all var(--trans)}
+.ni.active .ni-ico{background:rgba(79,114,247,.15);border-color:rgba(79,114,247,.3)}
+.ni-ico svg{width:14px;height:14px;flex-shrink:0}
+.ni-lbl{flex:1;transition:opacity var(--trans);overflow:hidden;text-overflow:ellipsis}
+.sidebar.col .ni-lbl{opacity:0;width:0}
+.ni-tip{position:absolute;left:calc(100% + 10px);top:50%;transform:translateY(-50%);background:var(--card);border:1px solid var(--border2);padding:5px 10px;border-radius:8px;font-size:.75rem;color:var(--t0);white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;box-shadow:var(--sh);z-index:400}
+.sidebar.col .ni:hover .ni-tip{opacity:1}
+.sb-foot{padding:12px 8px;border-top:1px solid var(--border);font-family:'DM Mono',monospace;font-size:.62rem;color:var(--t2);text-align:center;white-space:nowrap;transition:opacity var(--trans)}
+.sidebar.col .sb-foot{opacity:0}
+.sb-overlay{position:fixed;inset:0;z-index:199;background:rgba(0,0,0,.5);backdrop-filter:blur(2px);display:none}
+.sb-overlay.open{display:block}
+
+/* LAYOUT */
+.main{margin-left:var(--sidebar-w);padding-top:var(--topbar-h);min-height:100vh;transition:margin-left var(--trans);position:relative;z-index:1}
+.sidebar.col~.main{margin-left:var(--sidebar-col)}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.mopen{transform:translateX(0)!important}
+  .main{margin-left:0!important}
+  .cred-badge span,.page-title-bar{display:none}
+}
+
+/* PAGE */
+.page{display:none;padding:28px 24px 80px}
+.page.active{display:block}
+@media(max-width:480px){.page{padding:16px 14px 80px}}
+
+/* CARD */
+.card{width:100%;background:var(--card);border:1px solid var(--border2);border-radius:var(--rxl);padding:24px;box-shadow:var(--sh);position:relative;overflow:hidden;transition:background var(--trans),border-color var(--trans)}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--b400),var(--acc),var(--b400),transparent);background-size:200% auto;animation:bar 4s linear infinite}
+@keyframes bar{to{background-position:200% center}}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:20px}
+.mt2{margin-top:8px}.mt3{margin-top:14px}.mt4{margin-top:20px}
+
+/* SEC HEADER */
+.sec{display:flex;align-items:center;gap:9px;margin-bottom:12px}
+.sico{width:28px;height:28px;border-radius:8px;background:var(--card2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sico svg{width:13px;height:13px;color:var(--b400)}
+.slbl{font-family:'DM Mono',monospace;font-size:.64rem;font-weight:500;color:var(--b300);letter-spacing:.6px;text-transform:uppercase}
+.divider{height:1px;background:linear-gradient(90deg,var(--border2),transparent);margin-bottom:16px}
+
+/* FORM */
+.fg{display:flex;flex-direction:column;gap:13px}
+.fg1{display:flex;flex-direction:column;gap:5px}
+.fgr{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+@media(max-width:480px){.fgr{grid-template-columns:1fr}}
+label.lbl{font-size:.64rem;font-weight:600;color:var(--t2);letter-spacing:.4px;text-transform:uppercase}
+.iw{position:relative}
+.iw-ico{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--t2);pointer-events:none;transition:color var(--trans)}
+.iw:focus-within .iw-ico{color:var(--b400)}
+.pw-toggle{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:28px;height:28px;border:none;background:none;cursor:pointer;color:var(--t2);display:flex;align-items:center;justify-content:center;border-radius:6px;transition:color var(--trans),background var(--trans)}
+.pw-toggle:hover{color:var(--t0);background:var(--border)}
+.pw-toggle svg{width:14px;height:14px}
+input[type=text],input[type=password],input[type=email],select,textarea{width:100%;padding:10px 13px 10px 35px;background:var(--card2);border:1.5px solid var(--border);border-radius:var(--r);color:var(--t0);font-family:'Outfit',sans-serif;font-size:.86rem;font-weight:400;outline:none;transition:all var(--trans);-webkit-appearance:none;appearance:none}
+input::placeholder,textarea::placeholder{color:var(--t2);font-weight:300}
+input:focus,select:focus,textarea:focus{border-color:var(--b400);box-shadow:var(--glow);background:var(--card)}
+select{padding-left:35px;cursor:pointer}
+select option{background:var(--card);color:var(--t0)}
+textarea{padding-left:13px;resize:vertical;min-height:70px}
+input[type=password]{padding-right:42px}
+.hint{font-size:.65rem;color:var(--t2);margin-top:-3px;font-family:'DM Mono',monospace}
+
+/* BUTTON */
+.btn{width:100%;padding:11px 20px;background:linear-gradient(130deg,var(--b600),var(--b400));border:1px solid rgba(99,135,255,.25);border-radius:var(--r);color:#fff;font-family:'Outfit',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:8px;position:relative;overflow:hidden;transition:transform var(--trans),box-shadow var(--trans),filter var(--trans)}
+.btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:var(--shb);filter:brightness(1.08)}
+.btn:active:not(:disabled){transform:translateY(0);box-shadow:none}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn svg{width:14px;height:14px;flex-shrink:0}
+.btn-sec{background:var(--card2);color:var(--t1);border:1.5px solid var(--border2);box-shadow:none}
+.btn-sec:hover:not(:disabled){background:var(--card);color:var(--t0);border-color:var(--b400);box-shadow:var(--sh);filter:none}
+.btn-dan{background:linear-gradient(130deg,var(--red2),var(--red));border-color:rgba(255,77,106,.25)}
+.btn-dan:hover:not(:disabled){box-shadow:0 6px 20px rgba(255,77,106,.3)}
+.btn-sm{padding:6px 14px;font-size:.75rem;font-weight:600;border-radius:8px;margin-top:0;width:auto}
+.sp{display:none;width:14px;height:14px;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+.btn.loading .sp{display:block}
+.btn.loading .bt{opacity:.7}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* TABS */
+.tabs{display:flex;gap:2px;background:var(--card2);border:1px solid var(--border);border-radius:var(--rlg);padding:4px;margin-bottom:18px;flex-wrap:wrap}
+.tab{flex:1;min-width:80px;padding:8px 10px;border:none;border-radius:calc(var(--rlg) - 3px);background:none;cursor:pointer;color:var(--t1);font-family:'Outfit',sans-serif;font-size:.78rem;font-weight:600;display:flex;align-items:center;justify-content:center;gap:5px;transition:all var(--trans)}
+.tab svg{width:12px;height:12px;flex-shrink:0}
+.tab:hover:not(.active){background:var(--border);color:var(--t0)}
+.tab.active{background:var(--card);color:var(--t0);box-shadow:var(--sh)}
+.tab-panel{display:none}.tab-panel.active{display:block}
+
+/* TYPE PILLS */
+.type-pills{display:flex;gap:6px;flex-wrap:wrap}
+.type-pill{padding:5px 13px;border-radius:7px;border:1.5px solid var(--border2);background:var(--card2);color:var(--t1);font-family:'DM Mono',monospace;font-size:.71rem;font-weight:500;cursor:pointer;transition:all var(--trans)}
+.type-pill:hover{border-color:var(--b400);color:var(--t0)}
+.type-pill.active{background:var(--b500);border-color:var(--b400);color:#fff;box-shadow:0 2px 10px rgba(63,99,255,.3)}
+
+/* PROXY TOGGLE */
+.trow{display:flex;align-items:center;justify-content:space-between;border:1.5px solid;border-radius:var(--r);padding:10px 14px;cursor:pointer;transition:all var(--trans)}
+.trow.on{background:rgba(245,158,11,.07);border-color:rgba(245,158,11,.3)}
+.trow.off{background:var(--card2);border-color:var(--border)}
+.trow.on:hover{background:rgba(245,158,11,.11);border-color:rgba(245,158,11,.45)}
+.trow.off:hover{background:var(--card);border-color:var(--border2)}
+.tlbl{display:flex;align-items:center;gap:8px;font-size:.85rem;font-weight:500;color:var(--t0)}
+.tlbl svg{width:16px;height:16px;transition:color var(--trans)}
+.trow.on .tlbl svg{color:var(--amber)}
+.trow.off .tlbl svg{color:var(--t2)}
+.pbadge{font-family:'DM Mono',monospace;font-size:.58rem;font-weight:500;padding:2px 7px;border-radius:5px;transition:all var(--trans);letter-spacing:.3px}
+.trow.on .pbadge{background:rgba(245,158,11,.2);color:var(--amber)}
+.trow.off .pbadge{background:var(--border);color:var(--t2)}
+.sw{position:relative;width:38px;height:21px;flex-shrink:0}
+.sw input{opacity:0;width:0;height:0}
+.sl{position:absolute;inset:0;background:var(--t2);border-radius:21px;cursor:pointer;transition:background var(--trans)}
+.sl::before{content:'';position:absolute;width:15px;height:15px;left:3px;bottom:3px;background:#fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.2);transition:transform .24s cubic-bezier(.34,1.56,.64,1)}
+.sw input:checked+.sl{background:var(--amber)}
+.sw input:checked+.sl::before{transform:translateX(17px)}
+.sw-grn .sw input:checked+.sl{background:var(--acc)}
+
+/* TOGGLE ROW */
+.tog-row{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--card2);transition:all var(--trans)}
+.tog-row:hover{border-color:var(--border2)}
+.tog-info{display:flex;flex-direction:column;gap:3px}
+.tog-title{font-size:.85rem;font-weight:600;color:var(--t0)}
+.tog-desc{font-size:.72rem;color:var(--t2);font-family:'DM Mono',monospace}
+
+/* RESULT */
+.result{width:100%;border-radius:var(--r);border:1.5px solid;padding:16px 20px;margin-top:14px;display:none;animation:sup .34s cubic-bezier(.22,1,.36,1) both}
+@keyframes sup{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.result.ok{background:rgba(0,212,170,.05);border-color:rgba(0,212,170,.25)}
+.result.err{background:rgba(255,77,106,.05);border-color:rgba(255,77,106,.25)}
+.rh{display:flex;align-items:center;gap:8px;font-size:.8rem;font-weight:700;margin-bottom:10px}
+.result.ok .rh{color:var(--acc)}.result.err .rh{color:var(--red)}
+.rico{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.rico svg{width:12px;height:12px}
+.result.ok .rico{background:rgba(0,212,170,.15);color:var(--acc)}
+.result.err .rico{background:rgba(255,77,106,.15);color:var(--red)}
+.rg{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin-bottom:12px}
+.ri label{font-size:.6rem;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:1px}
+.ri span{font-family:'DM Mono',monospace;font-size:.8rem;color:var(--t0);word-break:break-all}
+.em{font-size:.84rem;color:var(--red);line-height:1.6}
+
+/* STAT CARD */
+.stat-card{background:var(--card);border:1px solid var(--border2);border-radius:var(--rlg);padding:18px 20px;display:flex;flex-direction:column;gap:6px;transition:all var(--trans);position:relative;overflow:hidden}
+.stat-card:hover{box-shadow:var(--sh);transform:translateY(-2px)}
+.stat-lbl{font-family:'DM Mono',monospace;font-size:.6rem;font-weight:500;color:var(--t2);text-transform:uppercase;letter-spacing:.5px}
+.stat-val{font-size:1.8rem;font-weight:800;color:var(--t0);letter-spacing:-1px;line-height:1}
+.stat-sub{font-size:.72rem;color:var(--t1);font-family:'DM Mono',monospace}
+.stat-ico{width:36px;height:36px;border-radius:10px;background:var(--card2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;margin-bottom:4px}
+.stat-ico svg{width:16px;height:16px;color:var(--b400)}
+
+/* RECORD LIST */
+.rec-list{display:flex;flex-direction:column;gap:8px}
+.rec-item{background:var(--card2);border:1px solid var(--border);border-radius:var(--r);padding:13px 15px;display:flex;flex-direction:column;gap:8px;transition:all var(--trans);position:relative;overflow:hidden}
+.rec-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--b400);opacity:0;transition:opacity var(--trans)}
+.rec-item:hover{border-color:var(--border2);background:var(--card)}
+.rec-item:hover::before{opacity:1}
+.rec-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.rec-name{font-family:'DM Mono',monospace;font-size:.82rem;color:var(--t0);font-weight:500;word-break:break-all;flex:1;min-width:0}
+.rec-badge{padding:2px 8px;border-radius:5px;font-family:'DM Mono',monospace;font-size:.62rem;font-weight:500;flex-shrink:0}
+.bt-A{background:rgba(63,99,255,.15);color:var(--b300)}
+.bt-AAAA{background:rgba(99,63,255,.15);color:#a78bfa}
+.bt-CNAME{background:rgba(0,212,170,.12);color:var(--acc)}
+.bt-TXT{background:rgba(245,158,11,.12);color:var(--amber)}
+.bt-MX{background:rgba(255,77,106,.12);color:var(--red)}
+.bt-NS{background:rgba(148,163,184,.12);color:var(--t1)}
+.bt-ACT{background:rgba(0,212,170,.12);color:var(--acc)}
+.bt-INA{background:rgba(255,77,106,.12);color:var(--red)}
+.prx-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.prx-on{background:var(--amber);box-shadow:0 0 6px rgba(245,158,11,.4)}
+.prx-off{background:var(--t2)}
+.rec-content{font-family:'DM Mono',monospace;font-size:.75rem;color:var(--t1);word-break:break-all;padding:6px 10px;background:var(--bg2);border-radius:7px;border:1px solid var(--border);line-height:1.5}
+.rec-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.rec-meta-i{font-size:.65rem;color:var(--t2);font-family:'DM Mono',monospace;display:flex;align-items:center;gap:4px}
+.rec-meta-i svg{width:10px;height:10px}
+.rec-actions{display:flex;gap:6px;margin-top:4px}
+.act-btn{padding:5px 10px;border-radius:7px;border:1px solid var(--border2);background:var(--card2);color:var(--t1);cursor:pointer;font-family:'DM Mono',monospace;font-size:.67rem;font-weight:500;display:flex;align-items:center;gap:5px;transition:all var(--trans)}
+.act-btn svg{width:11px;height:11px}
+.act-btn:hover{background:var(--card);color:var(--t0)}
+.act-btn.edit:hover{border-color:var(--b400);color:var(--b300)}
+.act-btn.del:hover{border-color:var(--red);color:var(--red)}
+.act-btn.succ:hover{border-color:var(--acc);color:var(--acc)}
+
+/* SEARCH */
+.search-bar{display:flex;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--border);border-radius:var(--r);padding:8px 12px;margin-bottom:14px;transition:border-color var(--trans)}
+.search-bar:focus-within{border-color:var(--b400)}
+.search-bar svg{width:14px;height:14px;color:var(--t2);flex-shrink:0}
+.search-bar input{border:none;background:none;outline:none;color:var(--t0);font-family:'Outfit',sans-serif;font-size:.84rem;width:100%;padding:0}
+.search-bar input::placeholder{color:var(--t2)}
+
+/* FILTER */
+.rec-filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.fpill{padding:3px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--card2);color:var(--t2);font-family:'DM Mono',monospace;font-size:.65rem;cursor:pointer;transition:all var(--trans)}
+.fpill:hover{border-color:var(--b400);color:var(--t1)}
+.fpill.active{background:var(--b500);border-color:var(--b400);color:#fff}
+.recs-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.recs-cnt{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--t2)}
+.recs-cnt span{color:var(--b300);font-weight:500}
+
+/* CONFIRM BOX */
+.conf-box{background:var(--card2);border:1.5px solid rgba(255,77,106,.25);border-radius:var(--r);padding:14px 16px;margin-top:8px;display:none;animation:sup .22s ease}
+.conf-box.open{display:block}
+.conf-msg{font-size:.83rem;color:var(--t1);margin-bottom:10px;line-height:1.55}
+.conf-msg strong{color:var(--red);font-weight:600}
+.conf-acts{display:flex;gap:8px}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:16px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--border2);border-radius:var(--rxl);padding:28px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 25px 80px rgba(0,0,0,.5);animation:min .22s cubic-bezier(.22,1,.36,1);position:relative}
+@keyframes min{from{opacity:0;transform:translateY(20px) scale(.97)}to{opacity:1;transform:none}}
+.modal-close{position:absolute;top:16px;right:16px;width:30px;height:30px;border-radius:8px;border:1px solid var(--border2);background:var(--card2);color:var(--t1);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--trans)}
+.modal-close:hover{background:var(--card);color:var(--t0)}
+.modal-close svg{width:14px;height:14px}
+.modal-ttl{font-size:1rem;font-weight:700;color:var(--t0);margin-bottom:16px;padding-right:30px}
+
+/* TOAST */
+.toast-c{position:fixed;bottom:28px;right:20px;z-index:999;display:flex;flex-direction:column;gap:8px;align-items:flex-end;pointer-events:none}
+.toast{display:flex;align-items:center;gap:10px;padding:11px 16px;border-radius:12px;border:1px solid;font-size:.82rem;font-weight:500;max-width:320px;box-shadow:0 8px 32px rgba(0,0,0,.3);animation:tin .3s cubic-bezier(.22,1,.36,1) both;pointer-events:auto;backdrop-filter:blur(12px);font-family:'Outfit',sans-serif}
+@keyframes tin{from{opacity:0;transform:translateX(20px) scale(.95)}to{opacity:1;transform:none}}
+.toast.out{animation:tout .25s ease both}
+@keyframes tout{to{opacity:0;transform:translateX(20px) scale(.95)}}
+.toast.ok{background:rgba(0,212,170,.12);border-color:rgba(0,212,170,.3);color:var(--acc)}
+.toast.err{background:rgba(255,77,106,.12);border-color:rgba(255,77,106,.3);color:var(--red)}
+.toast.info{background:rgba(63,99,255,.12);border-color:rgba(63,99,255,.3);color:var(--b300)}
+.toast svg{width:15px;height:15px;flex-shrink:0}
+
+/* PAGE HEADER */
+.ph{margin-bottom:24px}
+.ph-pill{display:inline-flex;align-items:center;gap:6px;background:var(--card2);border:1px solid var(--border2);border-radius:100px;padding:4px 13px 4px 9px;font-family:'DM Mono',monospace;font-size:.63rem;font-weight:500;color:var(--b300);letter-spacing:.4px;text-transform:uppercase;margin-bottom:12px}
+.pdot{width:6px;height:6px;background:var(--acc);border-radius:50%;animation:pulse 2.2s ease-in-out infinite}
+.ph-title{font-size:clamp(1.4rem,3vw,1.9rem);font-weight:800;letter-spacing:-.8px;color:var(--t0);line-height:1.2}
+.grad{background:linear-gradient(125deg,var(--b400),var(--acc));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.ph-sub{font-size:.82rem;color:var(--t1);margin-top:6px;font-weight:300}
+
+/* SSL MODE */
+.ssl-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:8px}
+.ssl-card{border:2px solid var(--border);border-radius:var(--r);padding:14px;cursor:pointer;transition:all var(--trans);background:var(--card2)}
+.ssl-card:hover{border-color:var(--border2);background:var(--card)}
+.ssl-card.active{border-color:var(--b400);background:rgba(79,114,247,.08)}
+.ssl-title{font-weight:700;font-size:.85rem;color:var(--t0);margin-bottom:3px}
+.ssl-desc{font-size:.7rem;color:var(--t2);font-family:'DM Mono',monospace;line-height:1.4}
+@media(max-width:480px){.ssl-grid{grid-template-columns:1fr}}
+
+/* OVERVIEW */
+.qa-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-top:4px}
+.qa-btn{display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 12px;border:1.5px solid var(--border2);border-radius:var(--rlg);background:var(--card2);cursor:pointer;transition:all var(--trans);font-family:'Outfit',sans-serif;font-size:.76rem;font-weight:600;color:var(--t1)}
+.qa-btn:hover{border-color:var(--b400);background:rgba(79,114,247,.06);color:var(--b300);transform:translateY(-2px);box-shadow:var(--sh)}
+.qa-ico{width:38px;height:38px;border-radius:10px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center}
+.qa-ico svg{width:16px;height:16px;color:var(--b400)}
+
+/* MISC */
+.empty{padding:36px 20px;text-align:center;color:var(--t2);font-size:.82rem;display:flex;flex-direction:column;align-items:center;gap:10px}
+.empty svg{width:32px;height:32px;opacity:.3}
+.cpbtn{padding:5px 10px;background:var(--card2);border:1.5px solid var(--border2);border-radius:7px;color:var(--t1);font-family:'DM Mono',monospace;font-size:.7rem;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all var(--trans)}
+.cpbtn svg{width:11px;height:11px}
+.cpbtn:hover{background:var(--card);border-color:var(--b400);color:var(--b300)}
+.cred-banner{display:flex;align-items:center;gap:10px;padding:10px 16px;border:1px solid var(--border2);border-radius:var(--r);background:rgba(79,114,247,.05);margin-bottom:16px;font-size:.76rem;color:var(--t1)}
+.cred-banner svg{width:14px;height:14px;color:var(--b400);flex-shrink:0}
+.cred-banner strong{color:var(--b300);cursor:pointer;text-decoration:underline}
+.snote{margin-top:10px;text-align:center;font-size:.64rem;color:var(--t2);display:flex;align-items:center;justify-content:center;gap:5px;font-family:'DM Mono',monospace}
+.snote svg{width:11px;height:11px;opacity:.5}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<!-- BG -->
+<div class="aurora" aria-hidden="true">
+  <div class="aurora-blob ab1"></div>
+  <div class="aurora-blob ab2"></div>
+  <div class="aurora-blob ab3"></div>
+</div>
+<div class="bg-grid" aria-hidden="true"></div>
+<canvas id="nc" aria-hidden="true"></canvas>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="hb" id="hbBtn" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+      <div class="hbl"></div><div class="hbl"></div><div class="hbl"></div>
+    </button>
+    <div class="brand">
+      <div class="brand-dot">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+      </div>
+      CF Manager
+    </div>
+    <div class="page-title-bar" id="pgTitle">Overview</div>
+  </div>
+  <div class="topbar-right">
+    <div class="cred-badge" onclick="openCredModal()" title="Set credentials">
+      <div class="cdot" id="credDot"></div>
+      <span id="credTxt">Not connected</span>
+    </div>
+    <div class="lang-sw">
+      <button class="on" onclick="setLang('en')">EN</button>
+      <div class="lsep"></div>
+      <button onclick="setLang('id')">ID</button>
+    </div>
+    <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme">
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- SIDEBAR OVERLAY -->
+<div class="sb-overlay" id="sbOverlay" onclick="closeMobile()"></div>
+
+<!-- SIDEBAR -->
+<nav class="sidebar" id="sidebar">
+  <div class="sb-inner">
+    <div class="sb-sec">Main</div>
+    <div class="ni active" id="ni-overview" onclick="goPage('overview')">
+      <div class="ni-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+      <span class="ni-lbl">Overview</span>
+      <div class="ni-tip">Overview</div>
+    </div>
+    <div class="ni" id="ni-dns" onclick="goPage('dns')">
+      <div class="ni-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
+      <span class="ni-lbl">DNS Records</span>
+      <div class="ni-tip">DNS Records</div>
+    </div>
+    <div class="sb-sec">Email &amp; Security</div>
+    <div class="ni" id="ni-email" onclick="goPage('email')">
+      <div class="ni-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+      <span class="ni-lbl">Email Routing</span>
+      <div class="ni-tip">Email Routing</div>
+    </div>
+    <div class="ni" id="ni-ssl" onclick="goPage('ssl')">
+      <div class="ni-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+      <span class="ni-lbl">SSL / TLS</span>
+      <div class="ni-tip">SSL / TLS</div>
+    </div>
+  </div>
+  <div class="sb-foot">CF Manager v2.0</div>
+</nav>
+
+<!-- MAIN -->
+<div class="main" id="main">
+
+<!-- PAGE: OVERVIEW -->
+<div class="page active" id="page-overview">
+  <div class="ph" data-aos="fade-down">
+    <div class="ph-pill"><span class="pdot"></span>Dashboard</div>
+    <div class="ph-title">Zone <span class="grad">Overview</span></div>
+    <div class="ph-sub">Summary of your Cloudflare zone.</div>
+  </div>
+  <div class="card" data-aos="fade-up">
+    <div class="sec"><div class="sico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><span class="slbl">Zone Info</span></div>
+    <div class="divider"></div>
+    <div class="empty" id="ovEmpty">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      <span>Connect credentials to see overview.</span>
+      <button class="btn btn-sec btn-sm" onclick="openCredModal()">Set Credentials</button>
+    </div>
+    <div id="ovData" class="hidden"><div class="rg" id="ovGrid"></div></div>
+  </div>
+  <div class="card-grid mt4" id="ovStats" data-aos="fade-up" data-aos-delay="80"></div>
+  <div class="card mt4" data-aos="fade-up" data-aos-delay="120">
+    <div class="sec"><div class="sico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div><span class="slbl">Quick Actions</span></div>
+    <div class="divider"></div>
+    <div class="qa-grid">
+      <div class="qa-btn" onclick="goPage('dns')"><div class="qa-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>Add DNS</div>
+      <div class="qa-btn" onclick="goPage('email')"><div class="qa-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>Email Route</div>
+      <div class="qa-btn" onclick="goPage('ssl')"><div class="qa-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>SSL Settings</div>
+      <div class="qa-btn" onclick="loadOverview()"><div class="qa-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg></div>Refresh</div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: DNS RECORDS -->
+<div class="page" id="page-dns">
+  <div class="ph" data-aos="fade-down">
+    <div class="ph-pill"><span class="pdot"></span>Cloudflare API v4</div>
+    <div class="ph-title"><span class="grad">DNS</span> Records</div>
+    <div class="ph-sub">Create, edit, and delete DNS records.</div>
+  </div>
+  <div class="tabs" data-aos="fade-up" data-aos-delay="60">
+    <button class="tab active" id="dtab-create" onclick="dnsTab('create')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Create
+    </button>
+    <button class="tab" id="dtab-list" onclick="dnsTab('list')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Records
+    </button>
+  </div>
+
+  <!-- CREATE -->
+  <div class="tab-panel active" id="dp-create">
+    <div class="card" data-aos="fade-up">
+      <div class="sec"><div class="sico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1"/></svg></div><span class="slbl">New Record</span></div>
+      <div class="divider"></div>
+      <div class="cred-banner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Credentials shared. <strong onclick="openCredModal()">Change</strong></div>
+      <div class="fg">
+        <div class="fg1">
+          <label class="lbl">Record Type</label>
+          <div class="type-pills">
+            <button class="type-pill active" data-t="A" onclick="setDNSType('A')">A</button>
+            <button class="type-pill" data-t="AAAA" onclick="setDNSType('AAAA')">AAAA</button>
+            <button class="type-pill" data-t="CNAME" onclick="setDNSType('CNAME')">CNAME</button>
+            <button class="type-pill" data-t="TXT" onclick="setDNSType('TXT')">TXT</button>
+          </div>
+        </div>
+        <div class="fg1">
+          <label class="lbl">Subdomain</label>
+          <div class="iw"><svg class="iw-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg><input type="text" id="dSub" placeholder="api" autocomplete="off" spellcheck="false"/></div>
+          <p class="hint">Prefix only — domain auto-resolved from Zone ID</p>
+        </div>
+        <div class="fg1" id="dIpGrp">
+          <label class="lbl" id="dIpLbl">Target IP</label>
+          <div class="iw"><svg class="iw-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg><input type="text" id="dIp" placeholder="1.2.3.4" autocomplete="off"/></div>
+        </div>
+        <div class="fg1 hidden" id="dTxtGrp">
+          <label class="lbl">TXT Content</label>
+          <textarea id="dTxt" placeholder="v=spf1 include:_spf.google.com ~all"></textarea>
+        </div>
+        <div class="fgr">
+          <div class="fg1">
+            <label class="lbl">TTL</label>
+            <div class="iw"><svg class="iw-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <select id="dTTL"><option value="1">Auto</option><option value="60">1 min</option><option value="120" selected>2 min</option><option value="300">5 min</option><option value="600">10 min</option><option value="1800">30 min</option><option value="3600">1 hr</option><option value="86400">1 day</option></select></div>
+          </div>
+          <div class="fg1" id="dProxyGrp">
+            <label class="lbl">Proxy</label>
+            <div class="trow on" id="dProxyRow" onclick="toggleProxy()">
+              <span class="tlbl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg><span class="pbadge" id="dPBadge">ORANGE</span></span>
+              <label class="sw" onclick="event.stopPropagation()"><input type="checkbox" id="dProxied" checked onchange="syncProxy()"/><span class="sl"></span></label>
+            </div>
+          </div>
+        </div>
+        <button class="btn" id="btnDNSCreate" onclick="createDNS()">
+          <div class="sp"></div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
+          <span class="bt">Create Record</span>
+        </button>
+      </div>
+      <p class="snote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Token sent directly to Cloudflare — never stored.</p>
+    </div>
+    <div class="result" id="dnsResult"><div class="rh"><div class="rico" id="dnsRIco"></div><span id="dnsRTtl"></span></div><div id="dnsRBdy"></div></div>
+  </div>
+
+  <!-- LIST -->
+  <div class="tab-panel" id="dp-list">
+    <div class="card" data-aos="fade-up">
+      <div class="sec"><div class="sico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg></div><span class="slbl">All Records</span></div>
+      <div class="divider"></div>
+      <div class="cred-banner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Using shared credentials. <strong onclick="openCredModal()">Change</strong></div>
+      <button class="btn btn-sec" id="btnDNSLoad" onclick="loadDNS()">
+        <div class="sp"></div>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
+        <span class="bt">Load Records</span>
+      </button>
+      <div id="dnsListSec" class="hidden mt3">
+        <div class="search-bar mt2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" placeholder="Search records..." oninput="filterDNS(this.value)" id="dnsSearch"/></div>
+        <div class="recs-hdr"><div class="recs-cnt" id="dnsCnt"></div></div>
+        <div class="rec-filter" id="dnsFilters"></div>
+        <div class="rec-list" id="dnsListEl"></div>
+      </div>
+      <div class="empty" id="dnsListEmpty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg><span>Load records to see them here.</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: EMAIL ROUTING -->
+<div class="page" id="page-email">
+  <div class="ph" data-aos="fade-down">
+    <div class="ph-pill"><span class="pdot"></span>Email API</div>
+    <div class="ph-title">Email <span class="grad">Routing</span></div>
+    <div class="ph-sub">Manage email routing rules for your domain.</div>
+  </div>
+  <div class="tabs" data-aos="fade-up" data-aos-delay="60">
+    <button class="tab active" id="etab-create" onclick="emailTab('create')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Create
+    </button>
+    <button class="tab" id="etab-list" onclick="emailTab('list')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg>Routes
+    </button>
+    <button class="tab" id="etab-dest" onclick="emailTab('dest')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.19 16a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>Destinations
+    </button>
+  </div>
+
+  <!-- CREATE -->
+  <div class="tab-panel active" id="ep-create">
+    <div class="card" data-aos="fade-up">
+      <div class="sec"><div class="sico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div><span class="slbl">New Route</span></div>
+      <div class="divider"></div>
+      <div class="fg">
+        <div class="fg1">
+          <label class="lbl">Route Type</label>
+          <div class="type-pills">
+            <button class="type-pill active" data-et="specific" onclick="setEmailType('specific')">Specific Address</button>
+            <button class="type-pill" data-et="catchall" onclick="setEmailType('catchall')">Catch-All (*)</button>
+          </div>
+        </div>
+        <div class="fg1" id="eSrcGrp">
+          <label class="lbl">Source Email</label>
+          <div class="iw"><svg class="iw-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><input type="text" id="eSrc" placeholder="admin" autocomplete="off"/></div>
+          <p class="hint">Prefix only — @domain.com appended automatically</p>
+        </div>
+        <div class="fg1">
+          <label class="lbl">Destination Email</label>
+          <div class="iw"><svg class="iw-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.19 16a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg><input type="email" id="eDest" placeholder="you@gmail.com" autocomplete="off"/></div>
+          <p class="hint">Must be a verified destination address</p>
+        </div>
+        <div class="tog-row sw-grn">
+          <div class="tog-info"><div class="tog-title">Enable Route</div><div class="tog-desc">Route active immediately after creation</div></div>
+          <label class="sw"><input type="checkbox" id="eEnabled" checked/><span class="sl"></span></label>
+        </div>
+        <button class="btn" id="btnEmailCreate" onclick="createEmailRoute()">
+          <div class="sp"></div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
+          <span class="bt">Create Route</span>
+        </button>
+      </div>
+      <div class="result mt3" id="emailResult"><div class="rh"><div class="rico" id="eRIco"></div><span id="eRTtl"></span></div><div id="eRBdy"></div></div>
+    </div>
+  </div>
+
+  <!-- LIST -->
+  <div class="tab-panel" id="ep-list">
+    <div class="card" data-aos="fade-up">
+      <div class="sec"><div class="sico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg></div><span class="slbl">Email Routes</span></div>
+      <div class="divider"></div>
+      <button class="btn btn-sec" id="btnEmailLoad" onclick="loadEmailRoutes()">
+        <div class="sp"></div>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
+        <span class="bt">Load Routes</span>
+      </button>
+      <div class="empty mt3" id="eListEmpty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/></svg><span>Click Load Routes to see your email routes.</span></div>
+      <div class="rec-list mt3" id="eListEl"></div>
+    </div>
+  </div>
+
+  <!-- DESTINATIONS -->
+  <div class="tab-panel" id="ep-dest">
+    <div class="card" data-aos="fade-up">
+      <div class="sec"><div class="sico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.19 16a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div><span class="slbl">Destination Addresses</span></div>
+      <div class="divider"></div>
+      <div class="fg" style="margin-bottom:14px">
+        <div class="fg1">
+          <label class="lbl">Add Destination</label>
+          <div class="iw"><svg class="iw-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><input type="email" id="newDest" placeholder="your@gmail.com"/></div>
+          <p class="hint">A verification email will be sent to this address</p>
+        </div>
+        <button class="btn" onclick="createDest()">
+          <div class="sp"></div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
+          <span class="bt">Add &amp; Send Verification</span>
+        </button>
+      </div>
+      <div class="divider"></div>
+      <button class="btn btn-sec" id="btnDestLoad" onclick="loadDests()">
+        <div class="sp"></div>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
+        <span class="bt">Load Destinations</span>
+      </button>
+      <div class="empty mt3" id="destEmpty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.19 16a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg><span>Load destinations to manage verified addresses.</span></div>
+      <div class="rec-list mt3" id="destListEl"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: SSL/TLS -->
+<div class="page" id="page-ssl">
+  <div class="ph" data-aos="fade-down">
+    <div class="ph-pill"><span class="pdot"></span>SSL API</div>
+    <div class="ph-title">SSL / <span class="grad">TLS</span></div>
+    <div class="ph-sub">Configure SSL and security settings for your domain.</div>
+  </div>
+  <div class="card" data-aos="fade-up">
+    <div class="sec"><div class="sico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><span class="slbl">SSL Mode</span></div>
+    <div class="divider"></div>
+    <div class="ssl-grid">
+      <div class="ssl-card" data-mode="off" onclick="selectSSL('off')"><div class="ssl-title">Off</div><div class="ssl-desc">No encryption. HTTP only.</div></div>
+      <div class="ssl-card" data-mode="flexible" onclick="selectSSL('flexible')"><div class="ssl-title">Flexible</div><div class="ssl-desc">Encrypted to browser, plain to server.</div></div>
+      <div class="ssl-card active" data-mode="full" onclick="selectSSL('full')"><div class="ssl-title">Full</div><div class="ssl-desc">Encrypted end-to-end, self-signed OK.</div></div>
+      <div class="ssl-card" data-mode="strict" onclick="selectSSL('strict')"><div class="ssl-title">Full (Strict)</div><div class="ssl-desc">Encrypted + valid CA cert required.</div></div>
+    </div>
+    <button class="btn mt2" id="btnSSLMode" onclick="saveSSLMode()">
+      <div class="sp"></div>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      <span class="bt">Save SSL Mode</span>
+    </button>
+  </div>
+
+  <div class="card mt4" data-aos="fade-up" data-aos-delay="60">
+    <div class="sec"><div class="sico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div><span class="slbl">HTTPS Settings</span></div>
+    <div class="divider"></div>
+    <div class="fg">
+      <div class="tog-row sw-grn"><div class="tog-info"><div class="tog-title">Always Use HTTPS</div><div class="tog-desc">Redirect all HTTP to HTTPS</div></div><label class="sw"><input type="checkbox" id="sslHttps" onchange="saveSSLToggle('always_use_https',this.checked)"/><span class="sl"></span></label></div>
+      <div class="tog-row sw-grn"><div class="tog-info"><div class="tog-title">Automatic HTTPS Rewrites</div><div class="tog-desc">Fix mixed content warnings</div></div><label class="sw"><input type="checkbox" id="sslRewrite" onchange="saveSSLToggle('automatic_https_rewrites',this.checked)"/><span class="sl"></span></label></div>
+      <div class="tog-row sw-grn"><div class="tog-info"><div class="tog-title">Opportunistic Encryption</div><div class="tog-desc">Encrypt HTTP requests when possible</div></div><label class="sw"><input type="checkbox" id="sslOppEnc" onchange="saveSSLToggle('opportunistic_encryption',this.checked)"/><span class="sl"></span></label></div>
+      <div class="tog-row sw-grn"><div class="tog-info"><div class="tog-title">TLS 1.3</div><div class="tog-desc">Enable TLS 1.3 protocol</div></div><label class="sw"><input type="checkbox" id="sslTLS13" onchange="saveSSLToggle('tls_1_3',this.checked)"/><span class="sl"></span></label></div>
+    </div>
+  </div>
+
+  <div class="card mt4" data-aos="fade-up" data-aos-delay="100">
+    <div class="sec"><div class="sico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><span class="slbl">Minimum TLS Version</span></div>
+    <div class="divider"></div>
+    <div class="fg1">
+      <label class="lbl">Min TLS Version</label>
+      <div class="iw"><svg class="iw-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <select id="minTLS"><option value="1.0">TLS 1.0</option><option value="1.1">TLS 1.1</option><option value="1.2" selected>TLS 1.2</option><option value="1.3">TLS 1.3</option></select></div>
+    </div>
+    <button class="btn mt2" id="btnMinTLS" onclick="saveMinTLS()">
+      <div class="sp"></div>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      <span class="bt">Save TLS Version</span>
+    </button>
+  </div>
+
+  <div class="card mt4" data-aos="fade-up" data-aos-delay="140">
+    <div class="sec"><div class="sico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><span class="slbl">Edge Certificates</span></div>
+    <div class="divider"></div>
+    <button class="btn btn-sec" id="btnSSLCerts" onclick="loadSSLCerts()">
+      <div class="sp"></div>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
+      <span class="bt">Load Certificates</span>
+    </button>
+    <div class="empty mt3" id="certEmpty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span>Load to view edge certificates.</span></div>
+    <div class="rec-list mt3" id="certListEl"></div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<!-- CREDENTIALS MODAL -->
+<div class="modal-overlay" id="credModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeCredModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <div class="modal-ttl">Cloudflare Credentials</div>
+    <p style="font-size:.78rem;color:var(--t1);margin-bottom:16px;line-height:1.5">Set once — shared across all pages. Never stored on server.</p>
+    <div class="fg">
+      <div class="fg1">
+        <label class="lbl">Zone ID</label>
+        <div class="iw"><svg class="iw-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><input type="text" id="gZone" placeholder="your-zone-id" autocomplete="off"/></div>
+      </div>
+      <div class="fg1">
+        <label class="lbl">API Token</label>
+        <div class="iw"><svg class="iw-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg><input type="password" id="gToken" placeholder="DNS:Edit + Zone Settings:Edit + Email Routing:Edit" autocomplete="new-password"/><button class="pw-toggle" type="button" onclick="togglePw('gToken','credEye')"><svg id="credEye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+        <p class="hint">Scope: Zone:Read + DNS:Edit + Zone Settings:Edit + Email Routing:Edit</p>
+      </div>
+      <button class="btn" onclick="saveCreds()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Save Credentials
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT DNS MODAL -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('editModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <div class="modal-ttl">Edit DNS Record</div>
+    <div class="fg">
+      <div class="fg1"><label class="lbl">Name</label><div class="iw"><svg class="iw-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg><input type="text" id="eName" autocomplete="off"/></div></div>
+      <div class="fg1"><label class="lbl">Content</label><div class="iw" id="eConWrap"><svg class="iw-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg><input type="text" id="eCon" autocomplete="off"/></div><textarea id="eConTxt" class="hidden" style="padding-left:13px"></textarea></div>
+      <div class="fgr">
+        <div class="fg1"><label class="lbl">TTL</label><div class="iw"><svg class="iw-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><select id="eTTL"><option value="1">Auto</option><option value="60">1 min</option><option value="120">2 min</option><option value="300">5 min</option><option value="600">10 min</option><option value="1800">30 min</option><option value="3600">1 hr</option><option value="86400">1 day</option></select></div></div>
+        <div class="fg1" id="eProxyGrp"><label class="lbl">Proxy</label><div class="trow on" id="eProxyRow" onclick="toggleEditProxy()"><span class="tlbl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg><span class="pbadge" id="ePBadge">ORANGE</span></span><label class="sw" onclick="event.stopPropagation()"><input type="checkbox" id="eProxied" checked onchange="syncEditProxy()"/><span class="sl"></span></label></div></div>
+      </div>
+      <button class="btn" id="btnSaveEdit" onclick="saveEditDNS()">
+        <div class="sp"></div>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        <span class="bt">Save Changes</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-c" id="toastC"></div>
+
+<script>
+AOS.init({ once:true, easing:'ease-out-quart', offset:8, duration:500 });
+
+// ── STATE ─────────────────────────────────────────────
+let dnsType = 'A';
+let dnsCache = [];
+let editId = '';
+let dnsFilter = 'ALL';
+let dnsSearch = '';
+let sslMode = 'full';
+let emailType = 'specific';
+let sidebarCol = false;
+
+// ── CREDENTIALS ───────────────────────────────────────
+const getCreds = () => ({ zone: localStorage.getItem('cf_zone')||'', token: localStorage.getItem('cf_token')||'' });
+
+function saveCreds() {
+  const z = document.getElementById('gZone').value.trim();
+  const t = document.getElementById('gToken').value.trim();
+  if (!z || !t) { toast('err','Zone ID and API Token required'); return; }
+  localStorage.setItem('cf_zone', z);
+  localStorage.setItem('cf_token', t);
+  updateCredBadge();
+  closeCredModal();
+  toast('ok','Credentials saved!');
+}
+function updateCredBadge() {
+  const {zone,token} = getCreds();
+  const dot = document.getElementById('credDot');
+  const txt = document.getElementById('credTxt');
+  if (zone && token) { dot.classList.add('on'); txt.textContent = zone.slice(0,8)+'…'; }
+  else { dot.classList.remove('on'); txt.textContent = 'Not connected'; }
+}
+function openCredModal() {
+  const {zone,token} = getCreds();
+  document.getElementById('gZone').value = zone;
+  document.getElementById('gToken').value = token;
+  document.getElementById('credModal').classList.add('open');
+}
+function closeCredModal() { document.getElementById('credModal').classList.remove('open'); }
+
+// ── THEME ─────────────────────────────────────────────
+function toggleTheme() {
+  const h = document.documentElement;
+  const n = h.getAttribute('data-theme')==='dark'?'light':'dark';
+  h.setAttribute('data-theme',n);
+  localStorage.setItem('cf_theme',n);
+}
+(()=>{ const s=localStorage.getItem('cf_theme'); if(s) document.documentElement.setAttribute('data-theme',s); })();
+
+// ── LANG ──────────────────────────────────────────────
+function setLang(l) {
+  document.querySelectorAll('.lang-sw button').forEach((b,i)=>b.classList.toggle('on',(l==='en'&&i===0)||(l==='id'&&i===2)));
+}
+
+// ── MODAL ─────────────────────────────────────────────
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if(e.target===el) el.classList.remove('open'); });
+});
+
+// ── PW TOGGLE ─────────────────────────────────────────
+const EYE_ON  = `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
+const EYE_OFF = `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>`;
+function togglePw(id, eyeId) {
+  const inp = document.getElementById(id);
+  const eye = document.getElementById(eyeId);
+  if(!inp||!eye) return;
+  const h = inp.type==='password';
+  inp.type = h?'text':'password';
+  eye.innerHTML = h?EYE_OFF:EYE_ON;
+}
+
+// ── TOAST ─────────────────────────────────────────────
+const TICO = {
+  ok:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+  err:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+  info:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`,
+};
+function toast(type, msg, dur=3500) {
+  const c = document.getElementById('toastC');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `${TICO[type]||TICO.info}<span>${esc(msg)}</span>`;
+  c.appendChild(el);
+  setTimeout(()=>{ el.classList.add('out'); setTimeout(()=>el.remove(),280); }, dur);
+}
+
+// ── HELPERS ───────────────────────────────────────────
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const escQ = s => String(s).replace(/'/g,'&#39;');
+function setLoad(id, on) { const b=document.getElementById(id); if(!b)return; b.disabled=on; b.classList.toggle('loading',on); }
+const SVG_OK  = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><polyline points="20 6 9 17 4 12"/></svg>`;
+const SVG_ERR = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+const SVG_CP  = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+window.copyText = text => navigator.clipboard.writeText(text).then(()=>toast('ok','Copied!'));
+
+function showResult(boxId, icoId, ttlId, bdyId, type, ico, title, body) {
+  const b = document.getElementById(boxId);
+  b.className = `result ${type}`; b.style.display='block';
+  document.getElementById(icoId).innerHTML = ico;
+  document.getElementById(ttlId).textContent = title;
+  document.getElementById(bdyId).innerHTML = body;
+  b.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+async function cfPost(body) {
+  const {zone,token} = getCreds();
+  if(!zone||!token) { toast('err','Set credentials first!'); openCredModal(); throw new Error('no creds'); }
+  const res = await fetch('/api/proxy.js', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({zone,token,...body}) });
+  return res.json();
+}
+
+// ── SIDEBAR ───────────────────────────────────────────
+function toggleSidebar() {
+  const sb=document.getElementById('sidebar');
+  const hb=document.getElementById('hbBtn');
+  const ov=document.getElementById('sbOverlay');
+  if(window.innerWidth<=768) {
+    const open=sb.classList.contains('mopen');
+    sb.classList.toggle('mopen',!open);
+    ov.classList.toggle('open',!open);
+    hb.classList.toggle('open',!open);
+  } else {
+    sidebarCol=!sidebarCol;
+    sb.classList.toggle('col',sidebarCol);
+    hb.classList.toggle('open',sidebarCol);
+  }
+}
+function closeMobile() {
+  document.getElementById('sidebar').classList.remove('mopen');
+  document.getElementById('sbOverlay').classList.remove('open');
+  document.getElementById('hbBtn').classList.remove('open');
+}
+
+// ── PAGE NAV ──────────────────────────────────────────
+const PAGE_TITLES = { overview:'Overview', dns:'DNS Records', email:'Email Routing', ssl:'SSL / TLS' };
+
+function goPage(name) {
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(el=>el.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  const ni = document.getElementById('ni-'+name);
+  if(ni) ni.classList.add('active');
+  document.getElementById('pgTitle').textContent = PAGE_TITLES[name]||name;
+  // tutup sidebar setelah klik menu
+  const sb=document.getElementById('sidebar');
+  const hb=document.getElementById('hbBtn');
+  const ov=document.getElementById('sbOverlay');
+  sb.classList.remove('mopen');
+  ov.classList.remove('open');
+  hb.classList.remove('open');
+  if(window.innerWidth<=1024 && window.innerWidth>768) {
+    sidebarCol=true;
+    sb.classList.add('col');
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── DNS TYPE ──────────────────────────────────────────
+function setDNSType(type) {
+  dnsType=type;
+  document.querySelectorAll('[data-t]').forEach(el=>el.classList.toggle('active',el.dataset.t===type));
+  const ipGrp=document.getElementById('dIpGrp');
+  const txtGrp=document.getElementById('dTxtGrp');
+  const proxyGrp=document.getElementById('dProxyGrp');
+  const ipLbl=document.getElementById('dIpLbl');
+  const ipIn=document.getElementById('dIp');
+  txtGrp.classList.add('hidden'); ipGrp.classList.remove('hidden'); proxyGrp.classList.remove('hidden');
+  if(type==='A'){ipLbl.textContent='Target IP';ipIn.placeholder='1.2.3.4';}
+  else if(type==='AAAA'){ipLbl.textContent='IPv6 Address';ipIn.placeholder='2606:4700::1';}
+  else if(type==='CNAME'){ipLbl.textContent='Target Hostname';ipIn.placeholder='example.com';proxyGrp.classList.add('hidden');}
+  else if(type==='TXT'){ipGrp.classList.add('hidden');txtGrp.classList.remove('hidden');proxyGrp.classList.add('hidden');}
+}
+function syncProxy() {
+  const on=document.getElementById('dProxied').checked;
+  const row=document.getElementById('dProxyRow');
+  row.classList.toggle('on',on); row.classList.toggle('off',!on);
+  document.getElementById('dPBadge').textContent=on?'ORANGE':'OFF';
+}
+function toggleProxy(){document.getElementById('dProxied').checked=!document.getElementById('dProxied').checked;syncProxy();}
+syncProxy();
+function syncEditProxy() {
+  const on=document.getElementById('eProxied').checked;
+  const row=document.getElementById('eProxyRow');
+  row.classList.toggle('on',on); row.classList.toggle('off',!on);
+  document.getElementById('ePBadge').textContent=on?'ORANGE':'OFF';
+}
+function toggleEditProxy(){document.getElementById('eProxied').checked=!document.getElementById('eProxied').checked;syncEditProxy();}
+
+// ── VALIDATION ────────────────────────────────────────
+function validIPv4(ip){const p=ip.split('.');return p.length===4&&p.every(x=>x!==''&&!isNaN(+x)&&+x>=0&&+x<=255&&String(+x)===x);}
+function validIPv6(ip){return /^([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$/.test(ip);}
+function validHost(h){return /^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/.test(h)||/^[a-zA-Z0-9\-]+$/.test(h);}
+
+// ── DNS TABS ──────────────────────────────────────────
+function dnsTab(name) {
+  document.querySelectorAll('[id^="dtab-"]').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('[id^="dp-"]').forEach(el=>el.classList.remove('active'));
+  document.getElementById('dtab-'+name).classList.add('active');
+  document.getElementById('dp-'+name).classList.add('active');
+}
+
+// ── CREATE DNS ────────────────────────────────────────
+async function createDNS() {
+  const {zone,token}=getCreds();
+  const sub=document.getElementById('dSub').value.trim();
+  const ip=document.getElementById('dIp').value.trim();
+  const txt=document.getElementById('dTxt').value.trim();
+  const prx=document.getElementById('dProxied').checked;
+  const ttl=parseInt(document.getElementById('dTTL').value);
+  const errs=[];
+  if(!zone) errs.push('Zone ID required — set credentials');
+  if(!token) errs.push('API Token required — set credentials');
+  if(!sub) errs.push('Subdomain required');
+  if(dnsType==='A'){if(!ip)errs.push('Target IP required');else if(!validIPv4(ip))errs.push('Invalid IPv4');}
+  else if(dnsType==='AAAA'){if(!ip)errs.push('IPv6 required');else if(!validIPv6(ip))errs.push('Invalid IPv6');}
+  else if(dnsType==='CNAME'){if(!ip)errs.push('Hostname required');else if(!validHost(ip))errs.push('Invalid hostname');}
+  else if(dnsType==='TXT'){if(!txt)errs.push('TXT content required');}
+  if(errs.length){showResult('dnsResult','dnsRIco','dnsRTtl','dnsRBdy','err',SVG_ERR,'Validation Failed',errs.map(e=>`<p class="em">· ${esc(e)}</p>`).join(''));return;}
+  setLoad('btnDNSCreate',true);
+  document.getElementById('dnsResult').style.display='none';
+  try {
+    const content=dnsType==='TXT'?txt:ip;
+    const data=await cfPost({subdomain:sub,ip:content,proxied:(dnsType==='A'||dnsType==='AAAA')?prx:false,ttl,type:dnsType});
+    if(data.success){
+      const r=data.result;
+      toast('ok','Record created!');
+      showResult('dnsResult','dnsRIco','dnsRTtl','dnsRBdy','ok',SVG_OK,'Record created!',
+        `<div class="rg"><div class="ri"><label>Name</label><span>${esc(r.name)}</span></div><div class="ri"><label>Type</label><span>${esc(r.type)}</span></div><div class="ri"><label>Content</label><span>${esc(r.content)}</span></div><div class="ri"><label>Proxied</label><span>${r.proxied?'✅ Yes':'❌ No'}</span></div></div>
+        <button class="cpbtn" onclick="copyText('${escQ(r.name)}')">${SVG_CP} Copy Name</button>`);
+    } else {
+      const em=data.errors?.[0]?.message||'Unknown error';
+      toast('err',em);
+      showResult('dnsResult','dnsRIco','dnsRTtl','dnsRBdy','err',SVG_ERR,'Cloudflare Error',`<p class="em">${esc(em)}</p>`);
+    }
+  } catch(e){if(e.message!=='no creds')toast('err',e.message);}
+  finally{setLoad('btnDNSCreate',false);}
+}
+
+// ── LOAD DNS ──────────────────────────────────────────
+async function loadDNS() {
+  const {zone,token}=getCreds();
+  if(!zone||!token){toast('err','Set credentials first!');openCredModal();return;}
+  setLoad('btnDNSLoad',true);
+  document.getElementById('dnsListSec').classList.add('hidden');
+  document.getElementById('dnsListEmpty').classList.remove('hidden');
+  document.getElementById('dnsListEmpty').querySelector('span').textContent='Loading…';
+  try {
+    const data=await cfPost({_action:'list'});
+    if(data.success){
+      dnsCache=data.result||[]; dnsFilter='ALL'; dnsSearch='';
+      document.getElementById('dnsSearch').value='';
+      renderDNS();
+      document.getElementById('dnsListEmpty').classList.add('hidden');
+      document.getElementById('dnsListSec').classList.remove('hidden');
+      toast('info',`Loaded ${dnsCache.length} records`);
+    } else {
+      const em=data.errors?.[0]?.message||'Error';
+      toast('err',em);
+      document.getElementById('dnsListEmpty').querySelector('span').textContent=em;
+    }
+  } catch(e){toast('err',e.message);}
+  finally{setLoad('btnDNSLoad',false);}
+}
+function filterDNS(q){dnsSearch=q.toLowerCase();renderDNS();}
+function setDNSFilter(f){dnsFilter=f;renderDNS();}
+function renderDNS() {
+  const types=[...new Set(dnsCache.map(r=>r.type))].sort();
+  let filtered=dnsFilter==='ALL'?dnsCache:dnsCache.filter(r=>r.type===dnsFilter);
+  if(dnsSearch) filtered=filtered.filter(r=>r.name.toLowerCase().includes(dnsSearch)||r.content.toLowerCase().includes(dnsSearch));
+  const fEl=document.getElementById('dnsFilters');
+  fEl.innerHTML=`<span style="font-size:.65rem;color:var(--t2);align-self:center;font-family:'DM Mono',monospace">Filter:</span>`+
+    ['ALL',...types].map(tp=>`<button class="fpill ${dnsFilter===tp?'active':''}" onclick="setDNSFilter('${tp}')">${tp==='ALL'?'All':tp}</button>`).join('');
+  document.getElementById('dnsCnt').innerHTML=`<span>${filtered.length}</span> record${filtered.length!==1?'s':''}${dnsFilter!=='ALL'?` (${dnsFilter})`:''}`;
+  const list=document.getElementById('dnsListEl');
+  if(!filtered.length){list.innerHTML=`<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg><span>No records found.</span></div>`;return;}
+  const ttlL=v=>v===1?'Auto':v<60?v+'s':v<3600?(v/60)+'m':(v/3600)+'h';
+  list.innerHTML=filtered.map(r=>`
+    <div class="rec-item" id="dr-${r.id}">
+      <div class="rec-top">
+        <span class="rec-name">${esc(r.name)}</span>
+        <span class="rec-badge bt-${r.type}">${esc(r.type)}</span>
+        ${(r.type==='A'||r.type==='AAAA')?`<span class="prx-dot ${r.proxied?'prx-on':'prx-off'}" title="${r.proxied?'Proxied':'DNS only'}"></span>`:''}
+      </div>
+      <div class="rec-content">${esc(r.content)}</div>
+      <div class="rec-meta">
+        <span class="rec-meta-i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>TTL: ${ttlL(r.ttl)}</span>
+        <span class="rec-meta-i" style="cursor:pointer" onclick="copyText('${escQ(r.id)}')" title="Copy ID"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>${esc(r.id.slice(0,8))}…</span>
+      </div>
+      <div class="rec-actions">
+        <button class="act-btn edit" onclick="openEditDNS('${escQ(r.id)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit</button>
+        <button class="act-btn del" onclick="confirmDel('${escQ(r.id)}','${escQ(r.name)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>Delete</button>
+      </div>
+      <div class="conf-box" id="dc-${r.id}">
+        <p class="conf-msg">Delete <strong>${esc(r.name)}</strong>?</p>
+        <div class="conf-acts">
+          <button class="btn btn-dan btn-sm" onclick="deleteDNS('${escQ(r.id)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>Delete</button>
+          <button class="btn btn-sec btn-sm" onclick="document.getElementById('dc-${escQ(r.id)}').classList.remove('open')">Cancel</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+function confirmDel(id,name){document.querySelectorAll('.conf-box').forEach(el=>el.classList.remove('open'));document.getElementById(`dc-${id}`)?.classList.add('open');}
+async function deleteDNS(id) {
+  const {zone,token}=getCreds();
+  try {
+    const data=await cfPost({_action:'delete',recordId:id});
+    if(data.success){dnsCache=dnsCache.filter(r=>r.id!==id);renderDNS();toast('ok','Record deleted!');}
+    else toast('err',data.errors?.[0]?.message||'Delete failed');
+  } catch(e){toast('err',e.message);}
+}
+function openEditDNS(id) {
+  const rec=dnsCache.find(r=>r.id===id); if(!rec)return;
+  editId=id;
+  document.getElementById('eName').value=rec.name;
+  const isTxt=rec.type==='TXT';
+  const cw=document.getElementById('eConWrap'),ct=document.getElementById('eConTxt'),ci=document.getElementById('eCon');
+  if(isTxt){cw.classList.add('hidden');ct.classList.remove('hidden');ct.value=rec.content;}
+  else{cw.classList.remove('hidden');ct.classList.add('hidden');ci.value=rec.content;}
+  const opts=[1,60,120,300,600,1800,3600,86400];
+  document.getElementById('eTTL').value=opts.reduce((a,b)=>Math.abs(b-rec.ttl)<Math.abs(a-rec.ttl)?b:a);
+  const pg=document.getElementById('eProxyGrp');
+  if(rec.type==='A'||rec.type==='AAAA'){pg.classList.remove('hidden');document.getElementById('eProxied').checked=rec.proxied;syncEditProxy();}
+  else pg.classList.add('hidden');
+  document.getElementById('editModal').classList.add('open');
+}
+async function saveEditDNS() {
+  const {zone,token}=getCreds(); if(!editId)return;
+  const rec=dnsCache.find(r=>r.id===editId); if(!rec)return;
+  const name=document.getElementById('eName').value.trim();
+  const isTxt=rec.type==='TXT';
+  const content=isTxt?document.getElementById('eConTxt').value.trim():document.getElementById('eCon').value.trim();
+  const ttl=parseInt(document.getElementById('eTTL').value);
+  const proxied=document.getElementById('eProxied').checked;
+  setLoad('btnSaveEdit',true);
+  try {
+    const data=await cfPost({_action:'update',recordId:editId,name,content,ttl,proxied,type:rec.type});
+    if(data.success){const idx=dnsCache.findIndex(r=>r.id===editId);if(idx>=0)dnsCache[idx]={...dnsCache[idx],...data.result};renderDNS();closeModal('editModal');toast('ok','Record updated!');}
+    else toast('err',data.errors?.[0]?.message||'Update failed');
+  } catch(e){toast('err',e.message);}
+  finally{setLoad('btnSaveEdit',false);}
+}
+
+// ── EMAIL ROUTING ─────────────────────────────────────
+function emailTab(name) {
+  document.querySelectorAll('[id^="etab-"]').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('[id^="ep-"]').forEach(el=>el.classList.remove('active'));
+  document.getElementById('etab-'+name).classList.add('active');
+  document.getElementById('ep-'+name).classList.add('active');
+}
+function setEmailType(type) {
+  emailType=type;
+  document.querySelectorAll('[data-et]').forEach(el=>el.classList.toggle('active',el.dataset.et===type));
+  document.getElementById('eSrcGrp').classList.toggle('hidden',type==='catchall');
+}
+async function createEmailRoute() {
+  const {zone,token}=getCreds();
+  if(!zone||!token){toast('err','Set credentials first!');openCredModal();return;}
+  const dest=document.getElementById('eDest').value.trim();
+  const enabled=document.getElementById('eEnabled').checked;
+  if(!dest){toast('err','Destination email required');return;}
+  let matchers;
+  if(emailType==='catchall'){matchers=[{type:'all'}];}
+  else{
+    const src=document.getElementById('eSrc').value.trim();
+    if(!src){toast('err','Source email required');return;}
+    matchers=[{type:'literal',field:'to',value:src.includes('@')?src:`${src}@placeholder`}];
+  }
+  const actions=[{type:'forward',value:[dest]}];
+  setLoad('btnEmailCreate',true);
+  try {
+    const data=await cfPost({_action:'emailCreate',matchers,actions,enabled});
+    if(data.success){toast('ok','Email route created!');showResult('emailResult','eRIco','eRTtl','eRBdy','ok',SVG_OK,'Route Created!',`<p style="font-size:.82rem;color:var(--t1)">Route ID: <span style="font-family:'DM Mono',monospace">${esc(data.result?.tag||'N/A')}</span></p>`);}
+    else{const em=data.errors?.[0]?.message||'Error';toast('err',em);showResult('emailResult','eRIco','eRTtl','eRBdy','err',SVG_ERR,'Error',`<p class="em">${esc(em)}</p>`);}
+  } catch(e){if(e.message!=='no creds')toast('err',e.message);}
+  finally{setLoad('btnEmailCreate',false);}
+}
+async function loadEmailRoutes() {
+  const {zone,token}=getCreds();
+  if(!zone||!token){toast('err','Set credentials first!');openCredModal();return;}
+  setLoad('btnEmailLoad',true);
+  document.getElementById('eListEmpty').classList.remove('hidden');
+  document.getElementById('eListEmpty').querySelector('span').textContent='Loading…';
+  document.getElementById('eListEl').innerHTML='';
+  try {
+    const data=await cfPost({_action:'emailList'});
+    if(data.success){
+      const routes=data.result||[];
+      document.getElementById('eListEmpty').classList.add('hidden');
+      if(!routes.length){document.getElementById('eListEl').innerHTML=`<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/></svg><span>No email routes found.</span></div>`;return;}
+      toast('info',`Loaded ${routes.length} routes`);
+      document.getElementById('eListEl').innerHTML=routes.map(r=>{
+        const src=r.matchers?.[0]?.type==='all'?'*@domain.com':(r.matchers?.[0]?.value||'N/A');
+        const dest=r.actions?.[0]?.value?.[0]||'N/A';
+        return `<div class="rec-item">
+          <div class="rec-top"><span class="rec-name">${esc(src)}</span><span class="rec-badge ${r.enabled?'bt-ACT':'bt-INA'}">${r.enabled?'Active':'Inactive'}</span></div>
+          <div class="rec-content">→ ${esc(dest)}</div>
+          <div class="rec-meta"><span class="rec-meta-i">ID: ${esc((r.tag||'').slice(0,8))}…</span></div>
+          <div class="rec-actions">
+            <button class="act-btn ${r.enabled?'del':'succ'}" onclick="toggleEmailRoute('${escQ(r.tag)}',${!r.enabled})">${r.enabled?'Disable':'Enable'}</button>
+            <button class="act-btn del" onclick="deleteEmailRoute('${escQ(r.tag)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>Delete</button>
+          </div>
+        </div>`;
+      }).join('');
+    } else{const em=data.errors?.[0]?.message||'Error';toast('err',em);document.getElementById('eListEmpty').querySelector('span').textContent=em;}
+  } catch(e){toast('err',e.message);}
+  finally{setLoad('btnEmailLoad',false);}
+}
+async function toggleEmailRoute(tag,enable) {
+  try{const data=await cfPost({_action:'emailToggle',tag,enabled:enable});if(data.success){toast('ok',`Route ${enable?'enabled':'disabled'}`);loadEmailRoutes();}else toast('err',data.errors?.[0]?.message||'Error');}
+  catch(e){toast('err',e.message);}
+}
+async function deleteEmailRoute(tag) {
+  if(!confirm('Delete this email route?'))return;
+  try{const data=await cfPost({_action:'emailDelete',tag});if(data.success){toast('ok','Route deleted!');loadEmailRoutes();}else toast('err',data.errors?.[0]?.message||'Error');}
+  catch(e){toast('err',e.message);}
+}
+async function loadDests() {
+  const {zone,token}=getCreds(); if(!zone||!token){toast('err','Set credentials first!');openCredModal();return;}
+  setLoad('btnDestLoad',true);
+  document.getElementById('destEmpty').classList.remove('hidden');
+  document.getElementById('destListEl').innerHTML='';
+  try {
+    const data=await cfPost({_action:'emailDestList'});
+    if(data.success){
+      const dests=data.result||[];
+      document.getElementById('destEmpty').classList.add('hidden');
+      if(!dests.length){document.getElementById('destListEl').innerHTML=`<div class="empty"><span>No destination addresses found.</span></div>`;return;}
+      toast('info',`${dests.length} destination(s)`);
+      document.getElementById('destListEl').innerHTML=dests.map(d=>`<div class="rec-item">
+        <div class="rec-top"><span class="rec-name">${esc(d.email)}</span><span class="rec-badge ${d.verified?'bt-ACT':'bt-INA'}">${d.verified?'Verified':'Pending'}</span></div>
+        <div class="rec-actions"><button class="act-btn del" onclick="deleteDest('${escQ(d.tag)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>Remove</button></div>
+      </div>`).join('');
+    } else toast('err',data.errors?.[0]?.message||'Error');
+  } catch(e){toast('err',e.message);}
+  finally{setLoad('btnDestLoad',false);}
+}
+async function createDest() {
+  const email=document.getElementById('newDest').value.trim();
+  if(!email){toast('err','Email required');return;}
+  try{const data=await cfPost({_action:'emailDestCreate',email});if(data.success){toast('ok','Verification email sent!');document.getElementById('newDest').value='';loadDests();}else toast('err',data.errors?.[0]?.message||'Error');}
+  catch(e){if(e.message!=='no creds')toast('err',e.message);}
+}
+async function deleteDest(tag) {
+  if(!confirm('Remove this destination?'))return;
+  try{const data=await cfPost({_action:'emailDestDelete',tag});if(data.success){toast('ok','Destination removed!');loadDests();}else toast('err',data.errors?.[0]?.message||'Error');}
+  catch(e){toast('err',e.message);}
+}
+
+// ── SSL / TLS ─────────────────────────────────────────
+function selectSSL(mode) {
+  sslMode=mode;
+  document.querySelectorAll('.ssl-card').forEach(el=>el.classList.toggle('active',el.dataset.mode===mode));
+}
+async function saveSSLMode() {
+  setLoad('btnSSLMode',true);
+  try{const data=await cfPost({_action:'sslMode',value:sslMode});if(data.success)toast('ok',`SSL mode: ${sslMode}`);else toast('err',data.errors?.[0]?.message||'Error');}
+  catch(e){if(e.message!=='no creds')toast('err',e.message);}
+  finally{setLoad('btnSSLMode',false);}
+}
+async function saveSSLToggle(setting,value) {
+  try{const data=await cfPost({_action:'sslToggle',setting,value});if(data.success)toast('ok','Setting updated');else{toast('err',data.errors?.[0]?.message||'Error');document.getElementById({always_use_https:'sslHttps',automatic_https_rewrites:'sslRewrite',opportunistic_encryption:'sslOppEnc',tls_1_3:'sslTLS13'}[setting]).checked=!value;}}
+  catch(e){toast('err',e.message);}
+}
+async function saveMinTLS() {
+  const ver=document.getElementById('minTLS').value;
+  setLoad('btnMinTLS',true);
+  try{const data=await cfPost({_action:'sslMinTLS',value:ver});if(data.success)toast('ok',`Min TLS: ${ver}`);else toast('err',data.errors?.[0]?.message||'Error');}
+  catch(e){if(e.message!=='no creds')toast('err',e.message);}
+  finally{setLoad('btnMinTLS',false);}
+}
+async function loadSSLCerts() {
+  setLoad('btnSSLCerts',true);
+  document.getElementById('certEmpty').classList.remove('hidden');
+  document.getElementById('certListEl').innerHTML='';
+  try{
+    const data=await cfPost({_action:'sslCerts'});
+    if(data.success){
+      const certs=data.result||[];
+      document.getElementById('certEmpty').classList.add('hidden');
+      if(!certs.length){document.getElementById('certListEl').innerHTML=`<div class="empty"><span>No certificates found.</span></div>`;return;}
+      toast('info',`${certs.length} certificate(s)`);
+      document.getElementById('certListEl').innerHTML=certs.map(c=>`<div class="rec-item">
+        <div class="rec-top"><span class="rec-name">${esc(c.hosts?.[0]||'N/A')}</span><span class="rec-badge bt-ACT">${esc(c.status||'active')}</span></div>
+        <div class="rec-content">Expires: ${c.expires_on?new Date(c.expires_on).toLocaleDateString():'N/A'} · Type: ${esc(c.type||'N/A')}</div>
+      </div>`).join('');
+    } else toast('err',data.errors?.[0]?.message||'Error');
+  } catch(e){if(e.message!=='no creds')toast('err',e.message);}
+  finally{setLoad('btnSSLCerts',false);}
+}
+
+// ── OVERVIEW ──────────────────────────────────────────
+async function loadOverview() {
+  const {zone,token}=getCreds(); if(!zone||!token)return;
+  document.getElementById('ovEmpty').innerHTML='<span style="color:var(--t2)">Loading…</span>';
+  try{
+    const [zRes,dRes]=await Promise.all([
+      cfPost({_action:'zoneInfo'}),
+      cfPost({_action:'list'}),
+    ]);
+    if(zRes.success){
+      const z=zRes.result;
+      document.getElementById('ovEmpty').classList.add('hidden');
+      document.getElementById('ovData').classList.remove('hidden');
+      document.getElementById('ovGrid').innerHTML=`
+        <div class="ri"><label>Domain</label><span>${esc(z.name)}</span></div>
+        <div class="ri"><label>Zone ID</label><span style="font-size:.7rem">${esc(z.id)}</span></div>
+        <div class="ri"><label>Status</label><span style="color:var(--acc)">${esc(z.status)}</span></div>
+        <div class="ri"><label>Plan</label><span>${esc(z.plan?.name||'Free')}</span></div>
+        <div class="ri"><label>Name Servers</label><span style="font-size:.7rem">${(z.name_servers||[]).join(', ')}</span></div>
+        <div class="ri"><label>Created</label><span>${z.created_on?new Date(z.created_on).toLocaleDateString():'N/A'}</span></div>`;
+    }
+    if(dRes.success){
+      const recs=dRes.result||[];
+      const c=recs.reduce((a,r)=>{a[r.type]=(a[r.type]||0)+1;return a;},{});
+      document.getElementById('ovStats').innerHTML=[
+        {lbl:'Total Records',val:recs.length,sub:'DNS records',ico:'<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>'},
+        {lbl:'A Records',val:c.A||0,sub:'IPv4 addresses',ico:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>'},
+        {lbl:'CNAME Records',val:c.CNAME||0,sub:'Aliases',ico:'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>'},
+        {lbl:'TXT Records',val:c.TXT||0,sub:'Text records',ico:'<line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/>'},
+      ].map(s=>`<div class="stat-card"><div class="stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${s.ico}</svg></div><div class="stat-lbl">${s.lbl}</div><div class="stat-val">${s.val}</div><div class="stat-sub">${s.sub}</div></div>`).join('');
+    }
+  } catch(e){toast('err',e.message);}
+}
+
+// ── NETWORK CANVAS ────────────────────────────────────
+(()=>{
+  const cv=document.getElementById('nc');
+  const cx=cv.getContext('2d');
+  let W,H,nd;
+  const N=28,DIST=120;
+  function resize(){W=cv.width=innerWidth;H=cv.height=innerHeight;}
+  function init(){nd=Array.from({length:N},()=>({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.22,vy:(Math.random()-.5)*.22,r:Math.random()*1.5+.8}));}
+  function frame(){
+    cx.clearRect(0,0,W,H);
+    const dark=document.documentElement.getAttribute('data-theme')==='dark';
+    const lc=dark?'rgba(99,135,255,':'rgba(37,99,235,';
+    const dc=dark?'rgba(99,135,255,.25)':'rgba(37,99,235,.2)';
+    for(let i=0;i<nd.length;i++)for(let j=i+1;j<nd.length;j++){
+      const dx=nd[i].x-nd[j].x,dy=nd[i].y-nd[j].y,d=Math.sqrt(dx*dx+dy*dy);
+      if(d<DIST){cx.beginPath();cx.moveTo(nd[i].x,nd[i].y);cx.lineTo(nd[j].x,nd[j].y);cx.strokeStyle=lc+(.1*(1-d/DIST))+')';cx.lineWidth=.5;cx.stroke();}
+    }
+    nd.forEach(n=>{cx.beginPath();cx.arc(n.x,n.y,n.r,0,Math.PI*2);cx.fillStyle=dc;cx.fill();n.x+=n.vx;n.y+=n.vy;if(n.x<0||n.x>W)n.vx*=-1;if(n.y<0||n.y>H)n.vy*=-1;});
+    requestAnimationFrame(frame);
+  }
+  resize();init();frame();
+  window.addEventListener('resize',()=>{resize();init();});
+})();
+
+// ── INIT ──────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded',()=>{
+  updateCredBadge();
+  const {zone,token}=getCreds();
+  if(zone&&token) loadOverview();
+  goPage('overview');
+});
+</script>
+</body>
+</html>
